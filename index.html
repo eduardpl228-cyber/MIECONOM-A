@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mi economía">
+<meta name="theme-color" content="#2e7d6b">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" id="iconoApp" href="">
+<title>Mi economía</title>
+<style>
+/* =========================================================
+   VARIABLES DE COLOR — cambia aquí la paleta del dashboard
+   ========================================================= */
+:root{
+  --fondo:#f3f4f1;
+  --tarjeta:#ffffff;
+  --borde:#e2e5de;
+  --texto:#1f2a24;
+  --suave:#66736b;
+  --acento:#2e7d6b;        /* verde petróleo: color principal */
+  --acento-2:#3d5a80;      /* azul: segundo color (gastos) */
+  --acento-claro:#d7ebe5;
+  --verde:#2f9e5b;         /* cobrado / pagado */
+  --naranja:#e08a1e;       /* pendiente / aviso */
+  --rojo:#d64545;          /* superado / pérdida */
+  --gris:#8a96a3;          /* previsto */
+  --campo:#f7f8f5;
+  --radio:22px;
+  --radio-s:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --fondo:#121614;
+    --tarjeta:#1b211e;
+    --borde:#2b332f;
+    --texto:#e8ede9;
+    --suave:#9aa69f;
+    --acento:#3fa58e;
+    --acento-2:#6d8fc0;
+    --acento-claro:#1f3a33;
+    --verde:#4cc27f;
+    --naranja:#f0a040;
+    --rojo:#ef6b6b;
+    --gris:#7c8794;
+    --campo:#232a26;
+  }
+}
+
+/* ===================== BASE ===================== */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--fondo);color:var(--texto);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;
+  font-size:15px;line-height:1.45;
+}
+.contenedor{max-width:1120px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(110px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+h2{font-size:1.05rem;margin:0 0 4px}
+.sub{color:var(--suave);font-size:.85rem;margin:0 0 14px}
+.tarjeta{background:var(--tarjeta);border:1px solid var(--borde);border-radius:var(--radio);padding:20px;margin-top:16px}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit;color:var(--texto)}
+
+/* ===================== CABECERA ===================== */
+.cabecera{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.cabecera .quien{display:flex;flex-direction:column}
+.nombre-input{font-size:1.5rem;font-weight:700;border:none;background:transparent;padding:0;width:12ch;min-width:6ch}
+.nombre-input:focus{outline:2px dashed var(--borde);border-radius:8px}
+.mes-actual{color:var(--suave);font-size:.95rem}
+.selector{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.selector select,.btn{
+  background:var(--tarjeta);border:1px solid var(--borde);border-radius:999px;padding:8px 14px;color:var(--texto)
+}
+.btn:hover{border-color:var(--acento)}
+.btn.icono{padding:8px 12px}
+.btn.primario{background:var(--acento);border-color:var(--acento);color:#fff}
+.acciones-top{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/* ===================== TARJETA PRINCIPAL ===================== */
+.principal{background:var(--acento);color:#fff;border:none;padding:26px}
+.principal .etiqueta{opacity:.85;font-size:.95rem}
+.principal .cifra{font-size:2.6rem;font-weight:800;letter-spacing:-.02em;margin:4px 0 10px}
+.principal .fila{display:flex;flex-wrap:wrap;gap:10px}
+.pildora{background:rgba(255,255,255,.16);border-radius:999px;padding:6px 14px;font-size:.9rem}
+a.pildora{color:inherit;text-decoration:none}
+.pildora.inv{background:rgba(255,255,255,.26);font-weight:600}
+
+/* ===================== 4 TARJETAS ===================== */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px}
+.kpi{background:var(--tarjeta);border:1px solid var(--borde);border-radius:var(--radio);padding:18px}
+.kpi .t{color:var(--suave);font-size:.85rem}
+.kpi .v{font-size:1.5rem;font-weight:700;margin:2px 0}
+.kpi .d{color:var(--suave);font-size:.8rem}
+.kpi .marca{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+
+/* ===================== GRÁFICO ===================== */
+.grafico{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:220px;padding-top:10px;border-bottom:1px solid var(--borde)}
+.col{display:flex;gap:3px;align-items:flex-end;justify-content:center;height:100%;cursor:pointer;border-radius:10px;padding:0 2px}
+.col.sel{background:var(--acento-claro)}
+.barra{width:42%;max-width:18px;border-radius:6px 6px 2px 2px;min-height:2px}
+.barra.ing{background:var(--acento)}
+.barra.gas{background:var(--acento-2)}
+.col.futuro .barra{opacity:.35}
+.ejes{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:6px;text-align:center;font-size:.75rem;color:var(--suave)}
+.leyenda{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:.85rem;color:var(--suave)}
+.leyenda span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-2px;background:var(--c)}
+
+/* ===================== TABLAS ===================== */
+.tabla-wrap{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:560px}
+th{text-align:left;font-size:.78rem;color:var(--suave);font-weight:600;padding:0 6px}
+td{padding:0 4px;vertical-align:middle}
+td input,td select{
+  width:100%;background:var(--campo);border:1px solid transparent;border-radius:var(--radio-s);padding:8px 10px
+}
+td input:focus,td select:focus{outline:none;border-color:var(--acento);background:var(--tarjeta)}
+td.num input{text-align:right}
+.chip{border:none;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:600;white-space:nowrap;color:#fff}
+.chip.cobrado,.chip.pagado{background:var(--verde)}
+.chip.pendiente{background:var(--naranja)}
+.chip.previsto{background:var(--gris)}
+select.estado{font-weight:600}
+select.estado.cobrado{color:var(--verde)}
+select.estado.pendiente{color:var(--naranja)}
+select.estado.previsto{color:var(--gris)}
+.mini{background:none;border:1px solid var(--borde);border-radius:10px;padding:6px 9px;color:var(--suave);line-height:1}
+.mini:hover{color:var(--rojo);border-color:var(--rojo)}
+.mini.neutro:hover{color:var(--acento);border-color:var(--acento)}
+.acc{white-space:nowrap;width:1%}
+.etq-rec{font-size:.72rem;color:var(--suave);padding:2px 6px}
+.pie-tabla{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.total{font-weight:700}
+.interruptor{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--suave)}
+.interruptor input{accent-color:var(--acento);width:18px;height:18px}
+
+/* ===================== GASTOS VARIABLES ===================== */
+.cat{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:8px;align-items:end;padding:14px 0;border-top:1px solid var(--borde)}
+.cat:first-of-type{border-top:none}
+.cat input{width:100%;background:var(--campo);border:1px solid transparent;border-radius:var(--radio-s);padding:8px 10px}
+.cat input:focus{outline:none;border-color:var(--acento)}
+.cat label{font-size:.72rem;color:var(--suave);display:block;margin-bottom:2px}
+.sumar{display:flex;gap:4px}
+.sumar button{border:none;background:var(--acento);color:#fff;border-radius:var(--radio-s);padding:0 12px;font-weight:700}
+.progreso{grid-column:1/-1;height:10px;background:var(--campo);border-radius:999px;overflow:hidden}
+.progreso > div{height:100%;background:var(--verde);border-radius:999px;transition:width .3s}
+.progreso.aviso > div{background:var(--naranja)}
+.progreso.pasado > div{background:var(--rojo)}
+.cat .estado-txt{grid-column:1/-1;font-size:.78rem;color:var(--suave);margin-top:-4px}
+
+/* ===================== DOS COLUMNAS ===================== */
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dos > .tarjeta{margin-top:16px}
+
+/* ===================== INFLACIÓN ===================== */
+.inf-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.inf-top input{width:90px;background:var(--campo);border:1px solid var(--borde);border-radius:var(--radio-s);padding:8px 10px;text-align:right}
+.cuenta{display:grid;grid-template-columns:1.6fr 1fr 1fr .8fr 1.2fr auto;gap:8px;align-items:end;padding:12px 0;border-top:1px solid var(--borde)}
+.cuenta:first-child{border-top:none}
+.cuenta label{font-size:.72rem;color:var(--suave);display:block;margin-bottom:2px}
+.cuenta input{width:100%;background:var(--campo);border:1px solid transparent;border-radius:var(--radio-s);padding:8px 10px}
+.cuenta .efecto{grid-column:1/-1;font-size:.78rem;padding-left:4px}
+.pos{color:var(--verde)} .neg{color:var(--rojo)}
+.resumen-inf{background:var(--campo);border-radius:var(--radio-s);padding:14px;margin-top:14px;font-size:.9rem}
+.resumen-inf b{font-size:1.05rem}
+.reparto{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:10px 0 6px;background:var(--borde)}
+.reparto .ok{background:var(--verde)} .reparto .mal{background:var(--rojo)}
+.nota{font-size:.75rem;color:var(--suave);margin-top:10px}
+
+/* ===================== OBJETIVOS ===================== */
+.objetivo{padding:12px 0;border-top:1px solid var(--borde)}
+.objetivo:first-of-type{border-top:none}
+.obj-campos{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:8px;align-items:end}
+.obj-campos input{width:100%;background:var(--campo);border:1px solid transparent;border-radius:var(--radio-s);padding:8px 10px}
+.obj-campos label{font-size:.72rem;color:var(--suave);display:block;margin-bottom:2px}
+.objetivo .progreso{margin-top:10px}
+.obj-info{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:.8rem;color:var(--suave);margin-top:6px}
+
+/* ===================== PRÓXIMOS PAGOS ===================== */
+.pagos{list-style:none;margin:0;padding:0}
+.pagos li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--borde)}
+.pagos li:first-child{border-top:none}
+.dia{width:44px;height:44px;border-radius:14px;background:var(--campo);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.dia small{font-size:.6rem;font-weight:500;color:var(--suave);text-transform:uppercase}
+.pagos .que{flex:1;min-width:0}
+.pagos .que div:last-child{font-size:.78rem;color:var(--suave)}
+.pagos .imp{font-weight:700;white-space:nowrap}
+.vencido{color:var(--rojo);font-weight:600}
+.vacio{color:var(--suave);font-size:.9rem;padding:8px 0}
+
+/* ===================== INVERSIONES ===================== */
+.inv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:6px 0 4px}
+.ik{background:var(--campo);border-radius:var(--radio-s);padding:12px 14px}
+.ik .t{color:var(--suave);font-size:.75rem}
+.ik .v{font-size:1.2rem;font-weight:700;margin-top:2px}
+.ik .d{color:var(--suave);font-size:.72rem}
+.plantillas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.h3{font-size:.98rem;margin:22px 0 4px}
+.proy{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:8px}
+.proy-fila{background:var(--campo);border-radius:16px;padding:14px 16px}
+.proy-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.proy-cab b{font-size:1rem}
+.proy-cab span{font-size:.75rem;color:var(--suave);text-align:right}
+.pbar{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:.8rem;margin-top:9px}
+.pbar .pl{color:var(--suave)}
+.pbar b{white-space:nowrap}
+.pbar .pt{grid-column:1/-1;height:10px;background:var(--borde);border-radius:999px;overflow:hidden}
+.pbar .pt div{height:100%;border-radius:999px;transition:width .4s}
+.proy-pie{font-size:.78rem;margin-top:10px;color:var(--suave);line-height:1.5}
+
+/* ===================== VOZ ===================== */
+.voz-fab{position:fixed;right:calc(18px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:20;
+  width:62px;height:62px;border-radius:50%;border:none;background:var(--acento);color:#fff;font-size:28px;line-height:1;
+  display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;transition:transform .15s,background .2s}
+.voz-fab:active{transform:scale(.92)}
+.voz-fab.escuchando{background:var(--rojo)}
+.voz-fab.escuchando::before,.voz-fab.escuchando::after{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--rojo);animation:onda 1.6s ease-out infinite}
+.voz-fab.escuchando::after{animation-delay:.8s}
+@keyframes onda{from{transform:scale(1);opacity:.7}to{transform:scale(1.7);opacity:0}}
+.voz-panel{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(94px + env(safe-area-inset-bottom));z-index:21;
+  width:min(390px,calc(100vw - 32px));background:var(--tarjeta);border:1px solid var(--borde);border-radius:var(--radio);
+  padding:16px;box-shadow:0 18px 44px rgba(0,0,0,.22);animation:sube .22s ease}
+.voz-panel[hidden]{display:none}
+@keyframes sube{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.voz-cab{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.voz-estado{font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:8px}
+.voz-estado .punto{width:9px;height:9px;border-radius:50%;background:var(--gris)}
+.voz-estado.on .punto{background:var(--rojo);animation:parpadeo 1s infinite}
+@keyframes parpadeo{50%{opacity:.25}}
+.voz-texto{width:100%;background:var(--campo);border:1px solid transparent;border-radius:var(--radio-s);padding:12px;font-size:16px}
+.voz-texto:focus{outline:none;border-color:var(--acento)}
+.voz-plan{margin-top:10px;background:var(--acento-claro);border-radius:var(--radio-s);padding:10px 12px;font-size:.88rem;line-height:1.4}
+.voz-plan small{display:block;color:var(--suave);font-size:.74rem;margin-top:3px}
+.voz-plan.error{background:rgba(214,69,69,.12);color:var(--rojo)}
+.voz-plan.vacio-plan{background:var(--campo);color:var(--suave)}
+.voz-botones{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:12px}
+.voz-botones .btn{border-radius:var(--radio-s);padding:11px 14px;font-weight:600}
+.voz-botones .btn:disabled{opacity:.45;cursor:default}
+.voz-ej{font-size:.72rem;color:var(--suave);margin-top:10px;line-height:1.5}
+
+/* ===================== APUNTES (registro de lo que apuntas) ===================== */
+.anotar{grid-column:1/-1}
+.anotar .fila-anotar{display:flex;gap:6px}
+.anotar .imp{width:96px;flex-shrink:0;text-align:right}
+.anotar .nota{flex:1;min-width:0}
+.anotar button{border:none;background:var(--acento);color:#fff;border-radius:var(--radio-s);padding:0 16px;font-weight:700;font-size:1.1rem}
+.desglose{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.desglose .etq{font-size:.72rem;color:var(--suave);margin-right:2px}
+.pastilla{background:var(--acento-claro);border-radius:999px;padding:4px 10px;font-size:.78rem;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pastilla b{font-weight:700}
+.pastilla.gris{background:var(--campo);color:var(--suave)}
+.ver-ap{background:none;border:none;color:var(--acento);font-weight:600;font-size:.8rem;padding:4px 0}
+.ap-cat{grid-column:1/-1;list-style:none;margin:0;padding:0;background:var(--campo);border-radius:var(--radio-s)}
+.ap-cat li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--borde);font-size:.85rem}
+.ap-cat li:first-child{border-top:none}
+.ap-cat .d{color:var(--suave);font-size:.75rem;width:46px;flex-shrink:0}
+.ap-cat .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-cat .i{font-weight:700;white-space:nowrap}
+
+.reg-buscar{width:100%;background:var(--campo);border:1px solid transparent;border-radius:var(--radio-s);padding:11px 12px;-webkit-appearance:none;appearance:none}
+.reg-buscar:focus{outline:none;border-color:var(--acento)}
+.filtros{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+.filtros::-webkit-scrollbar{display:none}
+.filtro{background:var(--tarjeta);border:1px solid var(--borde);border-radius:999px;padding:7px 13px;font-size:.82rem;white-space:nowrap;color:var(--suave)}
+.filtro.on{background:var(--acento);border-color:var(--acento);color:#fff;font-weight:600}
+.reg-resumen{background:var(--campo);border-radius:var(--radio-s);padding:14px;margin-top:10px}
+.reg-resumen h3{font-size:.9rem;margin:0 0 10px}
+.top-fila{margin-top:9px;font-size:.84rem}
+.top-fila .cab{display:flex;justify-content:space-between;gap:10px}
+.top-fila .cab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-fila .cab small{color:var(--suave);font-size:.72rem;margin-left:4px}
+.top-fila .cab b{white-space:nowrap}
+.top-fila .barra-top{height:6px;background:var(--borde);border-radius:999px;margin-top:4px;overflow:hidden}
+.top-fila .barra-top div{height:100%;background:var(--naranja);border-radius:999px}
+.reg-lista{list-style:none;margin:10px 0 0;padding:0}
+.reg-dia{font-size:.75rem;font-weight:700;color:var(--suave);padding:14px 2px 4px;display:flex;justify-content:space-between;text-transform:capitalize}
+.reg-item{display:grid;grid-template-columns:34px minmax(0,1fr) auto;column-gap:10px;row-gap:1px;align-items:center;padding:9px 0;border-top:1px solid var(--borde)}
+.reg-dia + .reg-item{border-top:none}
+.reg-ic{grid-row:1/3;width:34px;height:34px;border-radius:11px;background:var(--campo);display:grid;place-items:center;font-size:1rem}
+.reg-x{grid-column:3;grid-row:2;justify-self:end;padding:3px 8px !important;font-size:.75rem}
+.reg-nota{width:100%;border:1px solid transparent;background:transparent;border-radius:8px;padding:3px 6px;margin-left:-6px;font-weight:600}
+.reg-nota:focus{outline:none;background:var(--campo);border-color:var(--acento)}
+.reg-nota::placeholder{color:var(--suave);font-weight:500;font-style:italic}
+.reg-sub{grid-column:2;grid-row:2;color:var(--suave);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reg-imp{font-weight:700;white-space:nowrap}
+.reg-imp.mas{color:var(--verde)}
+.aviso-toast button{background:none;border:none;color:inherit;font-weight:700;text-decoration:underline;margin-left:10px;padding:0}
+
+/* ===================== MÓVIL ===================== */
+@media (max-width:760px){
+  .dos{grid-template-columns:1fr;gap:0}
+  .principal .cifra{font-size:2.1rem}
+  .cat{grid-template-columns:1fr 1fr}
+  .cat .nom{grid-column:1/-1}
+  .cat .borrar{grid-column:2;justify-self:end}
+  .obj-campos{grid-template-columns:1fr 1fr}
+  .obj-campos .nom{grid-column:1/-1}
+  .cuenta{grid-template-columns:1fr 1fr}
+  .cuenta .nom{grid-column:1/-1}
+  .cuenta .borrar{grid-column:1/-1;justify-self:end}
+  input,select{font-size:16px}   /* evita el zoom automático del iPhone al escribir */
+  .grafico{height:170px;gap:3px}
+  .ejes{gap:3px}
+  /* En móvil, cada fila de tabla se convierte en una ficha */
+  .tabla-wrap{overflow:visible;margin:0}
+  table{min-width:0;border-spacing:0}
+  thead{display:none}
+  tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0;border-top:1px solid var(--borde)}
+  tbody tr:first-child{border-top:none}
+  tbody td{padding:0}
+  tbody td:first-child{grid-column:1/-1}
+  tbody td[colspan]{grid-column:1/-1}
+  td.acc{width:auto;grid-column:2;justify-self:end;align-self:center}
+  td[style]{width:auto !important}
+}
+</style>
+</head>
+<body>
+<div class="contenedor">
+
+  <!-- 1. CABECERA -->
+  <header class="cabecera">
+    <div class="quien">
+      <input class="nombre-input" id="nombre" aria-label="Tu nombre" maxlength="30">
+      <span class="mes-actual" id="mesActual"></span>
+    </div>
+    <div class="selector">
+      <button class="btn icono" id="mesAnt" aria-label="Mes anterior">‹</button>
+      <select id="selMes" aria-label="Mes"></select>
+      <select id="selAnio" aria-label="Año"></select>
+      <button class="btn icono" id="mesSig" aria-label="Mes siguiente">›</button>
+      <button class="btn" id="btnHoy">Hoy</button>
+    </div>
+  </header>
+  <div class="acciones-top">
+    <button class="btn" id="btnExportar">⬇ Exportar copia</button>
+    <button class="btn" id="btnImportar">⬆ Importar copia</button>
+    <input type="file" id="fichero" accept="application/json,.json" hidden>
+    <button class="btn" id="btnBorrarEj">Borrar datos de ejemplo</button>
+  </div>
+
+  <!-- 2. TARJETA PRINCIPAL -->
+  <section class="tarjeta principal">
+    <div class="etiqueta">Ahorro del mes</div>
+    <div class="cifra" id="ahorro">0 €</div>
+    <div class="fila">
+      <span class="pildora" id="tasa"></span>
+      <span class="pildora" id="media"></span>
+      <span class="pildora" id="prevision"></span>
+      <a class="pildora inv" id="pilInv" href="#secInversiones"></a>
+    </div>
+  </section>
+
+  <!-- 3. CUATRO TARJETAS -->
+  <section class="kpis">
+    <div class="kpi"><div class="t"><span class="marca" style="background:var(--acento)"></span>Ingresos del mes</div><div class="v" id="kIng"></div><div class="d" id="kIngD"></div></div>
+    <div class="kpi"><div class="t"><span class="marca" style="background:var(--acento-2)"></span>Gastos fijos</div><div class="v" id="kFij"></div><div class="d" id="kFijD"></div></div>
+    <div class="kpi"><div class="t"><span class="marca" style="background:var(--naranja)"></span>Gastos variables</div><div class="v" id="kVar"></div><div class="d" id="kVarD"></div></div>
+    <div class="kpi"><div class="t"><span class="marca" style="background:var(--verde)"></span>Dinero disponible</div><div class="v" id="kDis"></div><div class="d">Tras pagar lo pendiente del mes</div></div>
+  </section>
+
+  <!-- 4. GRÁFICO 12 MESES -->
+  <section class="tarjeta">
+    <h2 id="tituloGrafico">El año de un vistazo</h2>
+    <p class="sub">Pulsa un mes para verlo. Los meses futuros (más claros) muestran la previsión.</p>
+    <div class="grafico" id="grafico"></div>
+    <div class="ejes" id="ejes"></div>
+    <div class="leyenda">
+      <span style="--c:var(--acento)">Ingresos</span>
+      <span style="--c:var(--acento-2)">Gastos</span>
+      <span style="--c:var(--gris)">Meses futuros: previsión</span>
+    </div>
+  </section>
+
+  <!-- 5. INGRESOS -->
+  <section class="tarjeta">
+    <h2>Ingresos</h2>
+    <p class="sub">Los ingresos "cada mes" (como la nómina) se repiten solos y se marcan como cobrados cuando pasa su día. Si te confirman pagas extra, añádelas como "previsto".</p>
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>Concepto</th><th>Importe (€)</th><th>Fecha</th><th>Repetir</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tIngresos"></tbody>
+      </table>
+    </div>
+    <div class="pie-tabla">
+      <button class="btn primario" data-act="nuevoIngreso">+ Añadir ingreso</button>
+      <span class="total" id="totIng"></span>
+    </div>
+  </section>
+
+  <!-- 6. GASTOS FIJOS -->
+  <section class="tarjeta">
+    <h2>Gastos fijos</h2>
+    <p class="sub">Alquiler, universidad, recibos y suscripciones. Se repiten automáticamente según su frecuencia.</p>
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>Concepto</th><th>Importe (€)</th><th>Día</th><th>Frecuencia</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tFijos"></tbody>
+      </table>
+    </div>
+    <div class="pie-tabla">
+      <button class="btn primario" data-act="nuevoFijo">+ Añadir gasto fijo</button>
+      <label class="interruptor"><input type="checkbox" id="propagar"> Aplicar cambios de importe también a los meses siguientes</label>
+      <span class="total" id="totFij"></span>
+    </div>
+    <p class="nota">✕ = quitar solo de este mes · ⏹ = deja de repetirse después de este mes · 🗑 = eliminar de todos los meses</p>
+  </section>
+
+  <!-- 7. GASTOS VARIABLES -->
+  <section class="tarjeta">
+    <h2>Gastos variables</h2>
+    <p class="sub">Apunta cada gasto con una nota corta («Mercadona», «cena con Ana») y debajo verás en qué se te ha ido el dinero de cada categoría. La barra se pone naranja al 80 % y roja al superar el presupuesto.</p>
+    <div id="cats"></div>
+    <div class="pie-tabla">
+      <button class="btn primario" data-act="nuevaCat">+ Añadir categoría</button>
+      <span class="total" id="totVar"></span>
+    </div>
+  </section>
+
+  <!-- 7b. REGISTRO DE APUNTES -->
+  <section class="tarjeta" id="secRegistro">
+    <h2>Registro de apuntes</h2>
+    <p class="sub">Todo lo que apuntas (por voz o con el botón +) queda aquí con su nota, para saber en qué se te ha ido el dinero. Toca una nota para corregirla.</p>
+    <input class="reg-buscar" id="regBuscar" type="search" placeholder="🔍 Buscar: mercadona, cena, gasolina…" autocomplete="off" enterkeyhint="search">
+    <div class="filtros" id="regFiltros"></div>
+    <div class="reg-resumen" id="regResumen"></div>
+    <ul class="reg-lista" id="regLista"></ul>
+  </section>
+
+  <!-- 8. INVERSIONES Y PATRIMONIO CONTRA LA INFLACIÓN (amplía la antigua sección de inflación) -->
+  <section class="tarjeta" id="secInversiones">
+    <h2>Inversiones y patrimonio contra la inflación</h2>
+    <p class="sub">Fondos indexados, cuentas remuneradas, depósitos… y también tu cuenta corriente. Si algo rinde menos que la inflación, pierde valor aunque el saldo no baje.</p>
+    <div class="inf-top">
+      <label for="inflacion">Inflación anual (%)</label>
+      <input id="inflacion" inputmode="decimal">
+    </div>
+    <div class="inv-kpis" id="invKpis"></div>
+    <div id="cuentas"></div>
+    <div class="plantillas">
+      <button class="btn primario" data-act="nuevaCuenta" data-plantilla="msci">+ Fondo MSCI World</button>
+      <button class="btn" data-act="nuevaCuenta" data-plantilla="sp500">+ Fondo S&amp;P 500</button>
+      <button class="btn" data-act="nuevaCuenta" data-plantilla="remunerada">+ Cuenta remunerada</button>
+      <button class="btn" data-act="nuevaCuenta">+ Otro</button>
+    </div>
+    <div class="resumen-inf" id="resumenInf"></div>
+    <h3 class="h3">Proyección de crecimiento y poder adquisitivo</h3>
+    <p class="sub">Interés compuesto mensual con el capital actual y la aportación mensual de cada vehículo. Compara el valor nominal, su valor real en euros de hoy y lo que valdría ese mismo dinero parado en la cuenta corriente al 0 %.</p>
+    <div class="proy" id="proyeccion"></div>
+    <p class="nota">Cálculo orientativo con rentabilidades anuales que introduces tú (antes de impuestos y con la inflación constante). No es una recomendación de inversión. IPC adelantado de España, octubre de 2026 (INE): 4,9 %.</p>
+  </section>
+
+  <div class="dos">
+    <!-- 9. OBJETIVOS DE AHORRO -->
+    <section class="tarjeta">
+      <h2>Objetivos de ahorro</h2>
+      <p class="sub" id="ritmoTxt"></p>
+      <div id="objetivos"></div>
+      <button class="btn primario" data-act="nuevoObj" style="margin-top:10px">+ Añadir objetivo</button>
+    </section>
+
+    <!-- 10. PRÓXIMOS PAGOS -->
+    <section class="tarjeta">
+      <h2>Próximos pagos</h2>
+      <p class="sub" id="pagosSub"></p>
+      <ul class="pagos" id="pagos"></ul>
+    </section>
+  </div>
+
+</div>
+
+<!-- 11. BOTÓN FLOTANTE DE VOZ -->
+<button class="voz-fab" id="vozFab" aria-label="Registrar por voz" title="Registrar por voz">🎤</button>
+<div class="voz-panel" id="vozPanel" hidden role="dialog" aria-label="Registro por voz">
+  <div class="voz-cab">
+    <span class="voz-estado" id="vozEstado"><span class="punto"></span><span id="vozEstadoTxt">Escuchando…</span></span>
+    <button class="mini neutro" id="vozCerrar" aria-label="Cerrar">✕</button>
+  </div>
+  <input class="voz-texto" id="vozTexto" placeholder="Di o escribe: 50 euros en supermercado" autocomplete="off" enterkeyhint="done">
+  <div class="voz-plan vacio-plan" id="vozPlan"></div>
+  <div class="voz-botones">
+    <button class="btn" id="vozCancelar">Cancelar</button>
+    <button class="btn primario" id="vozOk" disabled>✓ Confirmar</button>
+  </div>
+  <div class="voz-ej">Prueba: «50 euros en supermercado» · «Spotify pagado» · «Me han pagado la nómina» · «Ingreso de 200 € por clase particular» · «Inversión de 300 € en MSCI World» · «Gasto fijo de 9,99 en Disney Plus» · Di «en qué» y quedará anotado en el registro.</div>
+</div>
+
+<script>
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+const LS_KEY = 'mi-economia-v1';
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const fmtEur = new Intl.NumberFormat('es-ES', {style:'currency', currency:'EUR'});
+const eur = n => fmtEur.format(Math.round((n || 0) * 100) / 100);
+const pct = n => (isFinite(n) ? n : 0).toLocaleString('es-ES', {maximumFractionDigits:1}) + ' %';
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const suma = arr => arr.reduce((a, x) => a + (+x.importe || 0), 0);
+
+// Escapa texto del usuario antes de meterlo en el HTML
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Lee números escritos con coma o punto ("1.450,50", "1450.5", "12,3")
+function num(v){
+  let s = String(v ?? '').trim().replace(/\s|€|%/g, '');
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+// Muestra un número en un campo con coma decimal
+const numIn = n => (n === '' || n == null) ? '' : String(Math.round(n * 100) / 100).replace('.', ',');
+
+// Claves de mes con el formato "AAAA-MM"
+const clave = (y, m) => y + '-' + String(m + 1).padStart(2, '0');
+const partes = k => { const [y, m] = k.split('-').map(Number); return {y, m: m - 1}; };
+function sumarMeses(k, n){ let {y, m} = partes(k); m += n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return clave(y, m); }
+function difMeses(a, b){ const A = partes(a), B = partes(b); return (B.y - A.y) * 12 + (B.m - A.m); }
+const diasMes = k => { const {y, m} = partes(k); return new Date(y, m + 1, 0).getDate(); };
+const nombreMes = k => { const {y, m} = partes(k); return MESES[m] + ' ' + y; };
+const mesCorto = k => { const {y, m} = partes(k); return MESES[m].slice(0, 3).toLowerCase() + ' ' + y; };
+
+const HOY = new Date();
+const HOY_K = clave(HOY.getFullYear(), HOY.getMonth());
+const HOY_D = HOY.getDate();
+// ¿Ya ha pasado ese día? (sirve para marcar solos los recurrentes como cobrados/pagados)
+const yaPaso = (k, dia) => k < HOY_K || (k === HOY_K && dia <= HOY_D);
+
+/* =========================================================
+   DATOS DE EJEMPLO (3 meses ficticios hasta el mes actual)
+   ========================================================= */
+function datosEjemplo(){
+  const m0 = sumarMeses(HOY_K, -2), m1 = sumarMeses(HOY_K, -1), m2 = HOY_K;
+  const cats = [
+    {id:'c1', nombre:'Supermercado', presupuesto:200},
+    {id:'c2', nombre:'Ocio y restaurantes', presupuesto:90},
+    {id:'c3', nombre:'Transporte', presupuesto:40},
+    {id:'c4', nombre:'Salud', presupuesto:20},
+    {id:'c5', nombre:'Ropa', presupuesto:40},
+    {id:'c6', nombre:'Material universidad', presupuesto:25},
+    {id:'c7', nombre:'Imprevistos', presupuesto:40}
+  ];
+  const vars = {
+    [m0]: {c1:192, c2:110, c3:38, c4:12, c5:65, c6:40, c7:0},
+    [m1]: {c1:205, c2:76,  c3:40, c4:25, c5:18, c6:12, c7:30},
+    [m2]: {c1:48,  c2:22,  c3:40, c4:0,  c5:0,  c6:0,  c7:0}
+  };
+  return {
+    version:1, nombre:'Eduard', inflacion:4.9, ejemplo:true,
+    ejVars: JSON.parse(JSON.stringify(vars)),
+    ingresos:[
+      {id:'i1', concepto:'Nómina', importe:1650, fecha:m0 + '-01', estado:'cobrado', frecuencia:'mensual', fin:'', ej:true},
+      {id:'i2', concepto:'Venta de segunda mano', importe:60, fecha:m1 + '-17', estado:'cobrado', frecuencia:'unico', fin:'', ej:true}
+    ],
+    fijos:[
+      {id:'f1', concepto:'Alquiler', importe:600, dia:1, frecuencia:'mensual', inicio:m0, fin:'', ej:true},
+      {id:'f2', concepto:'Universidad (plazo matrícula)', importe:210, dia:5, frecuencia:'mensual', inicio:m0, fin:sumarMeses(m0, 7), ej:true},
+      {id:'f3', concepto:'Luz', importe:42, dia:8, frecuencia:'mensual', inicio:m0, fin:'', ej:true},
+      {id:'f4', concepto:'Internet y móvil', importe:30, dia:12, frecuencia:'mensual', inicio:m0, fin:'', ej:true},
+      {id:'f5', concepto:'Suscripciones (música, series)', importe:14, dia:15, frecuencia:'mensual', inicio:m0, fin:'', ej:true},
+      {id:'f6', concepto:'Gimnasio', importe:30, dia:3, frecuencia:'mensual', inicio:m0, fin:'', ej:true},
+      {id:'f7', concepto:'Seguro de hogar (inquilino)', importe:75, dia:20, frecuencia:'anual', inicio:m1, fin:'', ej:true}
+    ],
+    overrides:{ [m1]: { f3:{importe:48} } },   // ejemplo: la luz de ese mes vino más cara
+    categorias:cats,
+    variables:vars,
+    objetivos:[
+      {id:'o1', nombre:'Fondo de emergencia', objetivo:4500, ahorrado:2100, aporte:'', ej:true},
+      {id:'o2', nombre:'Viaje de verano', objetivo:900, ahorrado:250, aporte:'', ej:true},
+      {id:'o3', nombre:'Ordenador nuevo', objetivo:1100, ahorrado:300, aporte:'', ej:true}
+    ],
+    cuentas:[
+      {id:'a1', nombre:'Cuenta corriente', saldo:1200, rent:0, aporte:0, ej:true},
+      {id:'a2', nombre:'Cuenta remunerada', saldo:1500, rent:2, aporte:50, ej:true},
+      {id:'a3', nombre:'Fondo Indexado MSCI World', saldo:800, rent:7, aporte:100, ej:true}
+    ],
+    aportes:{},   // aportaciones sumadas cada mes: { "AAAA-MM": { idCuenta: importe } }
+    // Registro de apuntes: qué se apuntó, cuándo, cuánto y con qué nota
+    apuntes:[
+      {id:'p1', mes:m2, dia:Math.min(2, HOY_D), tipo:'variable', catId:'c1', importe:31.2, nota:'Mercadona', origen:'manual', ts:0, ej:true},
+      {id:'p2', mes:m2, dia:Math.min(9, HOY_D), tipo:'variable', catId:'c1', importe:16.8, nota:'Frutería', origen:'voz', ts:0, ej:true},
+      {id:'p3', mes:m2, dia:Math.min(7, HOY_D), tipo:'variable', catId:'c2', importe:22, nota:'Cena con amigos', origen:'voz', ts:0, ej:true},
+      {id:'p4', mes:m2, dia:1, tipo:'variable', catId:'c3', importe:40, nota:'Abono transporte', origen:'manual', ts:0, ej:true}
+    ]
+  };
+}
+
+// Estado vacío (cuando no se quieren ejemplos)
+const estadoVacio = () => ({version:1, nombre:'Yo', inflacion:4.9, ejemplo:false, ejVars:{}, ingresos:[], fijos:[], overrides:{}, categorias:[], variables:{}, objetivos:[], cuentas:[], aportes:{}, apuntes:[]});
+
+/* =========================================================
+   GUARDAR / CARGAR (localStorage con try/catch)
+   ========================================================= */
+let state;
+function cargar(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) { const d = JSON.parse(raw); if (valido(d)) return Object.assign(estadoVacio(), d); }
+  } catch (e) { /* almacenamiento no disponible: seguimos en memoria */ }
+  return datosEjemplo();
+}
+function guardar(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* sin almacenamiento */ }
+}
+const valido = d => d && Array.isArray(d.ingresos) && Array.isArray(d.fijos) && Array.isArray(d.categorias);
+
+state = cargar();
+let mesSel = HOY_K;      // mes que se está viendo
+
+/* =========================================================
+   LÓGICA DE MESES: recurrentes + cambios de un mes concreto
+   ========================================================= */
+// ¿Un elemento recurrente aparece en el mes k?
+function aplica(frec, inicio, fin, k){
+  if (k < inicio) return false;
+  if (fin && k > fin) return false;
+  const d = difMeses(inicio, k);
+  if (frec === 'unico') return d === 0;
+  if (frec === 'trimestral') return d % 3 === 0;
+  if (frec === 'anual') return d % 12 === 0;
+  return true; // mensual
+}
+// Cambios guardados solo para un mes (importe, estado o "quitado")
+const ov = (k, id) => (state.overrides[k] || {})[id] || {};
+function setOv(k, id, obj){
+  state.overrides[k] = state.overrides[k] || {};
+  state.overrides[k][id] = Object.assign({}, state.overrides[k][id], obj);
+}
+
+// Ingresos que corresponden al mes k
+function ingresosMes(k){
+  return state.ingresos.filter(i => aplica(i.frecuencia, i.fecha.slice(0, 7), i.fin, k)).map(i => {
+    const o = ov(k, i.id);
+    if (o.quitado) return null;
+    const dia = Math.min(+i.fecha.slice(8, 10) || 1, diasMes(k));
+    const origen = k === i.fecha.slice(0, 7);
+    const estado = o.estado || (origen ? i.estado : (yaPaso(k, dia) ? 'cobrado' : 'previsto'));
+    return {t:i, id:i.id, concepto:i.concepto, importe:(o.importe ?? i.importe), dia, fecha:k + '-' + String(dia).padStart(2, '0'), estado, rec:i.frecuencia !== 'unico'};
+  }).filter(Boolean).sort((a, b) => a.dia - b.dia);
+}
+
+// Gastos fijos que corresponden al mes k
+function fijosMes(k){
+  return state.fijos.filter(f => aplica(f.frecuencia, f.inicio, f.fin, k)).map(f => {
+    const o = ov(k, f.id);
+    if (o.quitado) return null;
+    const dia = Math.min(+f.dia || 1, diasMes(k));
+    const estado = o.estado || (yaPaso(k, dia) ? 'pagado' : 'pendiente');
+    return {t:f, id:f.id, concepto:f.concepto, importe:(o.importe ?? f.importe), dia, estado, rec:f.frecuencia !== 'unico'};
+  }).filter(Boolean).sort((a, b) => a.dia - b.dia);
+}
+
+const varReal = k => state.categorias.reduce((a, c) => a + (+((state.variables[k] || {})[c.id]) || 0), 0);
+const presTotal = () => state.categorias.reduce((a, c) => a + (+c.presupuesto || 0), 0);
+
+// Todas las cifras de un mes
+function totales(k){
+  const ing = ingresosMes(k), fij = fijosMes(k);
+  const cob = suma(ing.filter(x => x.estado === 'cobrado'));
+  const ingPend = suma(ing.filter(x => x.estado !== 'cobrado'));
+  const pag = suma(fij.filter(x => x.estado === 'pagado'));
+  const fijPend = suma(fij.filter(x => x.estado !== 'pagado'));
+  const vr = varReal(k), vp = presTotal();
+  // REGLA: ahorro = ingresos cobrados − gastos pagados (fijos pagados + variables ya gastados)
+  const ahorro = cob - pag - vr;
+  // Previsión: incluye lo pendiente y lo previsto. En meses en curso o futuros, el variable es como mínimo el presupuesto.
+  const varPrev = k < HOY_K ? vr : Math.max(vr, vp);
+  const prevision = cob + ingPend - pag - fijPend - varPrev;
+  return {cob, ingPend, pag, fijPend, vr, vp, ahorro, prevision,
+          disponible: cob - pag - vr - fijPend,
+          ingTot: cob + ingPend, fijTot: pag + fijPend,
+          hayDatos: ing.length > 0 || vr > 0};
+}
+
+// Media de ahorro de los 12 meses anteriores a k que tengan datos
+function mediaAnterior(k){
+  const vals = [];
+  for (let i = 1; i <= 12; i++){ const t = totales(sumarMeses(k, -i)); if (t.hayDatos) vals.push(t.ahorro); }
+  return {media: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null, n: vals.length};
+}
+
+/* =========================================================
+   PINTAR LA PÁGINA
+   ========================================================= */
+function pintarTodo(){
+  pintarCabecera(); pintarResumen(); pintarGrafico();
+  pintarIngresos(); pintarFijos(); pintarVariables();
+  pintarInflacion(); pintarObjetivos(); pintarPagos(); pintarRegistro();
+}
+// Solo lo que depende de cifras (para no perder el foco al escribir)
+function pintarCifras(){ pintarResumen(); pintarGrafico(); pintarPagos(); pintarObjetivos(); totalesTablas(); pintarRegistro(); }
+
+function pintarCabecera(){
+  $('nombre').value = state.nombre || '';
+  $('mesActual').textContent = nombreMes(mesSel) + (mesSel === HOY_K ? ' · mes actual' : '');
+  const {y, m} = partes(mesSel);
+  $('selMes').innerHTML = MESES.map((n, i) => `<option value="${i}" ${i === m ? 'selected' : ''}>${n}</option>`).join('');
+  const hoyY = HOY.getFullYear(); let anios = new Set([hoyY - 2, hoyY - 1, hoyY, hoyY + 1, hoyY + 2, y]);
+  $('selAnio').innerHTML = [...anios].sort().map(a => `<option ${a === y ? 'selected' : ''}>${a}</option>`).join('');
+  $('btnBorrarEj').style.display = state.ejemplo ? '' : 'none';
+}
+
+function pintarResumen(){
+  const t = totales(mesSel);
+  $('ahorro').textContent = eur(t.ahorro);
+  $('tasa').textContent = 'Tasa de ahorro: ' + (t.cob > 0 ? pct(t.ahorro / t.cob * 100) : '—');
+  const m = mediaAnterior(mesSel);
+  $('media').textContent = m.n ? `Media meses anteriores: ${eur(m.media)}` : 'Sin meses anteriores todavía';
+  $('prevision').textContent = 'Previsión a fin de mes: ' + eur(t.prevision);
+  $('kIng').textContent = eur(t.ingTot);
+  $('kIngD').textContent = `Cobrado ${eur(t.cob)} · Pendiente ${eur(t.ingPend)}`;
+  $('kFij').textContent = eur(t.fijTot);
+  $('kFijD').textContent = `Pagado ${eur(t.pag)} · Pendiente ${eur(t.fijPend)}`;
+  $('kVar').textContent = eur(t.vr);
+  $('kVarD').textContent = `Presupuesto ${eur(t.vp)} · ${t.vp ? pct(t.vr / t.vp * 100) : '—'} usado`;
+  $('kDis').textContent = eur(t.disponible);
+  $('kDis').className = 'v ' + (t.disponible < 0 ? 'neg' : '');
+  pintarPatrimonio();
+}
+
+// 4. Gráfico de barras con divs: 12 meses del año seleccionado
+function pintarGrafico(){
+  const {y} = partes(mesSel);
+  $('tituloGrafico').textContent = 'El año ' + y + ' de un vistazo';
+  const datos = MESES.map((_, i) => {
+    const k = clave(y, i), t = totales(k), futuro = k > HOY_K;
+    return futuro ? {k, futuro, ing:t.ingTot, gas:t.fijTot + t.vp} : {k, futuro, ing:t.cob, gas:t.pag + t.vr};
+  });
+  const max = Math.max(1, ...datos.map(d => Math.max(d.ing, d.gas)));
+  $('grafico').innerHTML = datos.map(d => `
+    <div class="col ${d.futuro ? 'futuro' : ''} ${d.k === mesSel ? 'sel' : ''}" data-mes="${d.k}"
+         title="${nombreMes(d.k)}${d.futuro ? ' (previsión)' : ''} — Ingresos ${eur(d.ing)} · Gastos ${eur(d.gas)}">
+      <div class="barra ing" style="height:${d.ing / max * 100}%"></div>
+      <div class="barra gas" style="height:${d.gas / max * 100}%"></div>
+    </div>`).join('');
+  $('ejes').innerHTML = MESES.map(n => `<div>${n.slice(0, 3)}</div>`).join('');
+}
+
+// Botones de acción de una fila recurrente
+function botonesFila(tipo, x){
+  return `<td class="acc">
+    ${x.rec ? `<button class="mini" title="Quitar solo de este mes" data-act="quitarMes" data-tipo="${tipo}" data-id="${x.id}">✕</button>
+               <button class="mini neutro" title="Dejar de repetir después de este mes" data-act="terminar" data-tipo="${tipo}" data-id="${x.id}">⏹</button>` : ''}
+    <button class="mini" title="Eliminar de todos los meses" data-act="eliminar" data-tipo="${tipo}" data-id="${x.id}">🗑</button>
+  </td>`;
+}
+
+// 5. Tabla de ingresos
+function pintarIngresos(){
+  const filas = ingresosMes(mesSel);
+  $('tIngresos').innerHTML = filas.length ? filas.map(x => `
+    <tr>
+      <td><input value="${esc(x.concepto)}" data-ch="ingConcepto" data-id="${x.id}" aria-label="Concepto"></td>
+      <td class="num"><input inputmode="decimal" value="${numIn(x.importe)}" data-ch="ingImporte" data-id="${x.id}" aria-label="Importe"></td>
+      <td><input type="date" value="${x.fecha}" data-ch="ingFecha" data-id="${x.id}" aria-label="Fecha"></td>
+      <td><select data-ch="ingFrec" data-id="${x.id}" aria-label="Repetir">
+        <option value="unico" ${!x.rec ? 'selected' : ''}>Una vez</option>
+        <option value="mensual" ${x.rec ? 'selected' : ''}>Cada mes</option></select></td>
+      <td><select class="estado ${x.estado}" data-ch="ingEstado" data-id="${x.id}" aria-label="Estado">
+        ${['cobrado', 'pendiente', 'previsto'].map(e => `<option value="${e}" ${e === x.estado ? 'selected' : ''}>${e[0].toUpperCase() + e.slice(1)}</option>`).join('')}
+      </select></td>
+      ${botonesFila('ing', x)}
+    </tr>`).join('') : `<tr><td colspan="6" class="vacio">No hay ingresos este mes.</td></tr>`;
+  totalesTablas();
+}
+
+// 6. Tabla de gastos fijos
+function pintarFijos(){
+  const filas = fijosMes(mesSel);
+  const frecs = {mensual:'Mensual', trimestral:'Trimestral', anual:'Anual', unico:'Solo una vez'};
+  $('tFijos').innerHTML = filas.length ? filas.map(x => `
+    <tr>
+      <td><input value="${esc(x.concepto)}" data-ch="fijConcepto" data-id="${x.id}" aria-label="Concepto">
+          ${x.t.fin ? `<div class="etq-rec">Hasta ${mesCorto(x.t.fin)}</div>` : ''}</td>
+      <td class="num"><input inputmode="decimal" value="${numIn(x.importe)}" data-ch="fijImporte" data-id="${x.id}" aria-label="Importe"></td>
+      <td style="width:80px"><input inputmode="numeric" value="${x.t.dia}" data-ch="fijDia" data-id="${x.id}" aria-label="Día de pago"></td>
+      <td><select data-ch="fijFrec" data-id="${x.id}" aria-label="Frecuencia">
+        ${Object.entries(frecs).map(([v, n]) => `<option value="${v}" ${v === x.t.frecuencia ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
+      <td><button class="chip ${x.estado}" data-act="toggleFijo" data-id="${x.id}">${x.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</button></td>
+      ${botonesFila('fij', x)}
+    </tr>`).join('') : `<tr><td colspan="6" class="vacio">No hay gastos fijos este mes.</td></tr>`;
+  totalesTablas();
+}
+
+function totalesTablas(){
+  $('totIng').textContent = 'Total: ' + eur(suma(ingresosMes(mesSel)));
+  $('totFij').textContent = 'Total: ' + eur(suma(fijosMes(mesSel)));
+  const t = totales(mesSel);
+  $('totVar').textContent = `Total: ${eur(t.vr)} de ${eur(t.vp)}`;
+}
+
+// 7. Gastos variables por categoría
+function pintarVariables(){
+  const vm = state.variables[mesSel] || {};
+  $('cats').innerHTML = state.categorias.length ? state.categorias.map(c => {
+    const real = +vm[c.id] || 0, pres = +c.presupuesto || 0;
+    const p = pres ? real / pres : (real > 0 ? 2 : 0);
+    const clase = p > 1 ? 'pasado' : (p >= .8 ? 'aviso' : '');
+    const texto = pres ? (real > pres ? `Te has pasado ${eur(real - pres)}` : `Te quedan ${eur(pres - real)} (${pct(p * 100)} usado)`) : 'Sin presupuesto';
+    return `<div class="cat" data-cat="${c.id}">
+      <div class="nom"><label>Categoría</label><input value="${esc(c.nombre)}" data-ch="catNombre" data-id="${c.id}"></div>
+      <div><label>Presupuesto/mes</label><input inputmode="decimal" value="${numIn(c.presupuesto)}" data-ch="catPres" data-id="${c.id}"></div>
+      <div><label>Gastado este mes</label><input inputmode="decimal" value="${numIn(real)}" data-ch="catReal" data-id="${c.id}"></div>
+      <button class="mini borrar" title="Eliminar categoría" data-act="borrarCat" data-id="${c.id}">🗑</button>
+      <div class="anotar"><label>Apuntar un gasto</label><div class="fila-anotar">
+        <input class="imp" inputmode="decimal" placeholder="0,00 €" data-sumar="${c.id}" aria-label="Importe">
+        <input class="nota" placeholder="¿En qué? (ej. Mercadona)" data-sumarnota="${c.id}" maxlength="60" autocomplete="off" enterkeyhint="done" aria-label="En qué">
+        <button data-act="sumar" data-id="${c.id}" aria-label="Apuntar">+</button></div></div>
+      <div class="progreso ${clase}"><div style="width:${Math.min(p, 1) * 100}%"></div></div>
+      <div class="estado-txt ${clase === 'pasado' ? 'neg' : ''}">${texto}</div>
+      ${desgloseCategoria(c, real)}
+    </div>`;
+  }).join('') : '<p class="vacio">Añade categorías como supermercado, ocio o transporte.</p>';
+  totalesTablas();
+}
+
+// 8. Inversiones y patrimonio frente a la inflación
+function pintarInflacion(){
+  $('inflacion').value = numIn(state.inflacion);
+  $('cuentas').innerHTML = state.cuentas.map(a => `
+    <div class="cuenta">
+      <div class="nom"><label>Vehículo o cuenta</label><input value="${esc(a.nombre)}" data-ch="ctaNombre" data-id="${a.id}"></div>
+      <div><label>Capital actual (€)</label><input inputmode="decimal" value="${numIn(a.saldo)}" data-ch="ctaSaldo" data-id="${a.id}"></div>
+      <div><label>Aportación/mes (€)</label><input inputmode="decimal" value="${numIn(+a.aporte || 0)}" data-ch="ctaAporte" data-id="${a.id}"></div>
+      <div><label>Rentab. anual (%)</label><input inputmode="decimal" value="${numIn(a.rent)}" data-ch="ctaRent" data-id="${a.id}"></div>
+      <div><label>Sumar aportación</label><div class="sumar"><input inputmode="decimal" placeholder="0,00" data-aportar="${a.id}"><button data-act="aportar" data-id="${a.id}" aria-label="Sumar aportación">+</button></div></div>
+      <button class="mini borrar" data-act="borrarCta" data-id="${a.id}" title="Eliminar">🗑</button>
+      <div class="efecto" id="ef-${a.id}"></div>
+    </div>`).join('') || '<p class="vacio">Añade dónde tienes tu dinero: un fondo indexado, una cuenta remunerada, la cuenta corriente…</p>';
+  calcularInflacion();
+}
+
+const signo = n => (n >= 0 ? '+' : '−');
+// Valor futuro con interés compuesto mensual y aportación al final de cada mes
+function valorFuturo(capital, aporte, rentAnual, anios){
+  const r = rentAnual / 12, n = anios * 12;
+  if (!r) return capital + aporte * n;
+  const f = Math.pow(1 + r, n);
+  return capital * f + aporte * (f - 1) / r;
+}
+const aportadoMes = (k, id) => +((state.aportes || {})[k] || {})[id] || 0;
+
+function calcularInflacion(){
+  const infP = +state.inflacion || 0, inf = infP / 100;
+  let total = 0, rentPond = 0, saldoMal = 0, efecto1 = 0, real5 = 0, apTotal = 0, apPond = 0, apMes = 0;
+  state.cuentas.forEach(a => {
+    const s = +a.saldo || 0, r = (+a.rent || 0) / 100, ap = +a.aporte || 0;
+    const ef = s * ((1 + r) / (1 + inf) - 1);           // ganancia/pérdida de poder adquisitivo en 1 año
+    const realP = (+a.rent || 0) - infP;                 // rentabilidad real (rentabilidad − inflación)
+    const delMes = aportadoMes(mesSel, a.id);
+    total += s; rentPond += s * r; efecto1 += ef; apTotal += ap; apPond += ap * r; apMes += delMes;
+    real5 += s * Math.pow((1 + r) / (1 + inf), 5);
+    if (r < inf) saldoMal += s;
+    const el = $('ef-' + a.id);
+    if (el) el.innerHTML = (s || ap) ? `<span class="${realP >= 0 ? 'pos' : 'neg'}">Rentabilidad real ${signo(realP)}${pct(Math.abs(realP))}</span>`
+      + (s ? ` · <span class="${ef >= 0 ? 'pos' : 'neg'}">${ef >= 0 ? 'Gana' : 'Pierde'} ${eur(Math.abs(ef))} de poder adquisitivo al año</span>` : '')
+      + (delMes ? ` · Aportado en ${nombreMes(mesSel)}: <b>${eur(delMes)}</b>` : '') : '';
+  });
+  const media = total ? rentPond / total * 100 : (apTotal ? apPond / apTotal * 100 : 0);
+  const rReal = media - infP;
+  const bien = total - saldoMal;
+
+  $('invKpis').innerHTML = state.cuentas.length ? `
+    <div class="ik"><div class="t">Patrimonio total</div><div class="v">${eur(total)}</div><div class="d">${eur(bien)} protegido</div></div>
+    <div class="ik"><div class="t">Aportación mensual</div><div class="v">${eur(apTotal)}</div><div class="d">Sumado en ${MESES[partes(mesSel).m].toLowerCase()}: ${eur(apMes)}</div></div>
+    <div class="ik"><div class="t">Rentabilidad esperada</div><div class="v">${pct(media)}</div><div class="d">Media ponderada</div></div>
+    <div class="ik"><div class="t">Rentabilidad real</div><div class="v ${rReal >= 0 ? 'pos' : 'neg'}">${signo(rReal)}${pct(Math.abs(rReal))}</div><div class="d">${rReal >= 0 ? 'Ganas poder adquisitivo' : 'Pierdes poder adquisitivo'}</div></div>` : '';
+
+  $('resumenInf').innerHTML = total ? `
+    Patrimonio: <b>${eur(total)}</b> · rentabilidad media ${pct(media)} · rentabilidad real <b class="${rReal >= 0 ? 'pos' : 'neg'}">${signo(rReal)}${pct(Math.abs(rReal))}</b>
+    <div class="reparto" title="Verde: rinde más que la inflación · Rojo: rinde menos">
+      <div class="ok" style="width:${bien / total * 100}%"></div><div class="mal" style="width:${saldoMal / total * 100}%"></div></div>
+    <div><span class="pos">${eur(bien)}</span> protegido · <span class="neg">${eur(saldoMal)}</span> perdiendo valor</div>
+    <div style="margin-top:8px">En 1 año: <b class="${efecto1 >= 0 ? 'pos' : 'neg'}">${signo(efecto1)}${eur(Math.abs(efecto1))}</b> de poder adquisitivo.
+      En 5 años tu patrimonio actual (sin aportar más) equivaldría a <b>${eur(real5)}</b> de hoy.</div>
+    <div style="margin-top:6px">Para no perder valor necesitas una rentabilidad de al menos <b>${pct(infP)}</b> al año.</div>`
+    : 'Añade tus inversiones y cuentas para ver el efecto de la inflación.';
+
+  pintarProyeccion();
+  pintarPatrimonio();
+}
+
+// Simulador a 1, 5, 10 y 20 años: nominal vs. real vs. dinero parado al 0 %
+function pintarProyeccion(){
+  const inf = (+state.inflacion || 0) / 100;
+  const vs = state.cuentas.filter(a => (+a.saldo || 0) > 0 || (+a.aporte || 0) > 0);
+  if (!vs.length){ $('proyeccion').innerHTML = '<p class="vacio">Indica capital o aportación mensual en algún vehículo para ver la proyección.</p>'; return; }
+  $('proyeccion').innerHTML = [1, 5, 10, 20].map(Y => {
+    let nominal = 0, aportado = 0;
+    vs.forEach(a => {
+      nominal += valorFuturo(+a.saldo || 0, +a.aporte || 0, (+a.rent || 0) / 100, Y);
+      aportado += (+a.saldo || 0) + (+a.aporte || 0) * 12 * Y;
+    });
+    const deflactor = Math.pow(1 + inf, Y);
+    const real = nominal / deflactor, parado = aportado / deflactor;
+    const max = Math.max(nominal, aportado, 1);
+    const ganaReal = real - aportado, pierdeParado = aportado - parado;
+    const barra = (txt, v, color) => `<div class="pbar"><span class="pl">${txt}</span><b>${eur(v)}</b><div class="pt"><div style="width:${v / max * 100}%;background:${color}"></div></div></div>`;
+    return `<div class="proy-fila">
+      <div class="proy-cab"><b>En ${Y} ${Y === 1 ? 'año' : 'años'}</b><span>Aportas en total ${eur(aportado)}</span></div>
+      ${barra('1) Valor nominal futuro', nominal, 'var(--acento)')}
+      ${barra('2) Valor real (€ de hoy)', real, 'var(--verde)')}
+      ${barra('3) Parado al 0 % (€ de hoy)', parado, 'var(--rojo)')}
+      <div class="proy-pie">Invirtiendo, en poder adquisitivo <b class="${ganaReal >= 0 ? 'pos' : 'neg'}">${ganaReal >= 0 ? 'ganas' : 'pierdes'} ${eur(Math.abs(ganaReal))}</b> sobre lo aportado.
+        Parado en cuenta corriente <b class="neg">perderías ${eur(pierdeParado)}</b>.</div>
+    </div>`;
+  }).join('');
+}
+
+// Píldora de la cabecera: total invertido y patrimonio protegido frente a la inflación
+function pintarPatrimonio(){
+  const infP = +state.inflacion || 0;
+  let invertido = 0, protegido = 0;
+  state.cuentas.forEach(a => {
+    const s = +a.saldo || 0, r = +a.rent || 0;
+    if (r > 0) invertido += s;
+    if (r > 0 && r >= infP) protegido += s;
+  });
+  $('pilInv').textContent = state.cuentas.length
+    ? `🛡️ Invertido ${eur(invertido)} · ${eur(protegido)} protegido de la inflación`
+    : '🛡️ Añade tus inversiones';
+}
+
+// Suma una aportación al capital de un vehículo y la apunta en el mes seleccionado
+function aportar(id, importe){
+  const a = buscar('cuentas', id); if (!a || !importe) return;
+  a.saldo = Math.round(((+a.saldo || 0) + importe) * 100) / 100;
+  state.aportes = state.aportes || {};
+  const am = state.aportes[mesSel] = state.aportes[mesSel] || {};
+  am[id] = Math.round(((+am[id] || 0) + importe) * 100) / 100;
+}
+
+// 9. Objetivos de ahorro
+function pintarObjetivos(){
+  const m = mediaAnterior(HOY_K);
+  const ritmo = m.n ? m.media : totales(HOY_K).ahorro;
+  const sinAporte = state.objetivos.filter(o => o.aporte === '' || o.aporte == null).length || 1;
+  $('ritmoTxt').textContent = `Tu ritmo actual es de ${eur(ritmo)} al mes. Si no indicas una aportación, se reparte ese ritmo entre los objetivos que no la tienen.`;
+  const cont = $('objetivos');
+  const foco = document.activeElement && cont.contains(document.activeElement);
+  if (foco) { // no repintamos los campos mientras se escribe: solo barras y fechas
+    state.objetivos.forEach(o => actualizarObj(o, ritmo, sinAporte)); return;
+  }
+  cont.innerHTML = state.objetivos.map(o => `
+    <div class="objetivo">
+      <div class="obj-campos">
+        <div class="nom"><label>Objetivo</label><input value="${esc(o.nombre)}" data-ch="objNombre" data-id="${o.id}"></div>
+        <div><label>Meta (€)</label><input inputmode="decimal" value="${numIn(o.objetivo)}" data-ch="objMeta" data-id="${o.id}"></div>
+        <div><label>Ahorrado (€)</label><input inputmode="decimal" value="${numIn(o.ahorrado)}" data-ch="objAhorrado" data-id="${o.id}"></div>
+        <div><label>Aporte/mes (€)</label><input inputmode="decimal" placeholder="auto" value="${numIn(o.aporte)}" data-ch="objAporte" data-id="${o.id}"></div>
+        <button class="mini" data-act="borrarObj" data-id="${o.id}" title="Eliminar">🗑</button>
+      </div>
+      <div class="progreso"><div id="ob-b-${o.id}"></div></div>
+      <div class="obj-info"><span id="ob-p-${o.id}"></span><span id="ob-f-${o.id}"></span></div>
+    </div>`).join('') || '<p class="vacio">Añade un objetivo: fondo de emergencia, viaje, ordenador…</p>';
+  state.objetivos.forEach(o => actualizarObj(o, ritmo, sinAporte));
+}
+function actualizarObj(o, ritmo, sinAporte){
+  const meta = +o.objetivo || 0, ah = +o.ahorrado || 0;
+  const p = meta ? Math.min(ah / meta, 1) : 0;
+  const aporte = (o.aporte === '' || o.aporte == null) ? ritmo / sinAporte : +o.aporte;
+  const falta = Math.max(meta - ah, 0);
+  let fecha;
+  if (!falta) fecha = '¡Conseguido!';
+  else if (aporte <= 0) fecha = 'Sin ritmo de ahorro suficiente';
+  else { const n = Math.ceil(falta / aporte); fecha = `Lo conseguirás en ${mesCorto(sumarMeses(HOY_K, n))} (${n} ${n === 1 ? 'mes' : 'meses'}, ${eur(aporte)}/mes)`; }
+  const b = $('ob-b-' + o.id); if (!b) return;
+  b.style.width = p * 100 + '%';
+  $('ob-p-' + o.id).textContent = `${pct(p * 100)} · faltan ${eur(falta)}`;
+  $('ob-f-' + o.id).textContent = fecha;
+}
+
+// 10. Próximos pagos del mes, ordenados por día
+function pintarPagos(){
+  const fij = fijosMes(mesSel);
+  const pend = suma(fij.filter(x => x.estado !== 'pagado'));
+  $('pagosSub').textContent = fij.length ? `Pendiente de pagar en ${nombreMes(mesSel)}: ${eur(pend)}` : '';
+  const {m} = partes(mesSel);
+  $('pagos').innerHTML = fij.length ? fij.map(x => {
+    const vencido = x.estado !== 'pagado' && mesSel <= HOY_K && yaPaso(mesSel, x.dia);
+    return `<li>
+      <div class="dia">${x.dia}<small>${MESES[m].slice(0, 3)}</small></div>
+      <div class="que"><div>${esc(x.concepto)}</div><div class="${vencido ? 'vencido' : ''}">${vencido ? 'Vencido · revisa si está pagado' : (x.estado === 'pagado' ? 'Pagado' : 'Pendiente')}</div></div>
+      <div class="imp">${eur(x.importe)}</div>
+      <button class="chip ${x.estado}" data-act="toggleFijo" data-id="${x.id}">${x.estado === 'pagado' ? 'Pagado ✓' : 'Marcar pagado'}</button>
+    </li>`;
+  }).join('') : '<li class="vacio">No hay pagos programados este mes.</li>';
+}
+
+/* =========================================================
+   EDICIÓN: un único gestor para todos los campos
+   ========================================================= */
+const buscar = (lista, id) => state[lista].find(x => x.id === id);
+const PLANTILLAS = {
+  msci:{nombre:'Fondo Indexado MSCI World', rent:7},
+  sp500:{nombre:'Fondo Indexado S&P 500', rent:7},
+  remunerada:{nombre:'Cuenta remunerada', rent:2}
+};
+
+// Cambia el importe de un recurrente: solo este mes o también los siguientes
+function cambiarImporte(lista, t, valor, inicioPlantilla){
+  const esRec = t.frecuencia !== 'unico';
+  if (!esRec || mesSel === inicioPlantilla && $('propagar').checked) { t.importe = valor; delete (state.overrides[mesSel] || {})[t.id]?.importe; return; }
+  if ($('propagar').checked){
+    // Congela el importe antiguo en los meses anteriores y fija el nuevo como base
+    for (let k = inicioPlantilla; k < mesSel; k = sumarMeses(k, 1)){
+      if (ov(k, t.id).importe == null) setOv(k, t.id, {importe:t.importe});
+    }
+    Object.keys(state.overrides).forEach(k => { if (k >= mesSel && state.overrides[k][t.id]) delete state.overrides[k][t.id].importe; });
+    t.importe = valor;
+  } else setOv(mesSel, t.id, {importe:valor});
+}
+
+document.addEventListener('change', e => {
+  const el = e.target, id = el.dataset.id, v = el.value;
+  switch (el.dataset.ch){
+    // --- Ingresos ---
+    case 'ingConcepto': buscar('ingresos', id).concepto = v; break;
+    case 'ingImporte': { const t = buscar('ingresos', id); cambiarImporte('ingresos', t, num(v), t.fecha.slice(0, 7)); break; }
+    case 'ingFecha': {
+      if (!v) break;
+      const t = buscar('ingresos', id);
+      if (t.frecuencia === 'unico') t.fecha = v;                     // mueve el ingreso a esa fecha
+      else t.fecha = t.fecha.slice(0, 8) + v.slice(8, 10);           // en recurrentes cambia el día de cobro
+      break;
+    }
+    case 'ingFrec': { const t = buscar('ingresos', id); t.frecuencia = v; if (v === 'mensual') t.fecha = mesSel < t.fecha.slice(0, 7) ? mesSel + t.fecha.slice(7) : t.fecha; break; }
+    case 'ingEstado': {
+      const t = buscar('ingresos', id);
+      if (t.frecuencia === 'unico' || mesSel === t.fecha.slice(0, 7)) t.estado = v; else setOv(mesSel, id, {estado:v});
+      if (t.frecuencia !== 'unico' && mesSel === t.fecha.slice(0, 7)) delete (state.overrides[mesSel] || {})[id]?.estado;
+      break;
+    }
+    // --- Gastos fijos ---
+    case 'fijConcepto': buscar('fijos', id).concepto = v; break;
+    case 'fijImporte': { const t = buscar('fijos', id); cambiarImporte('fijos', t, num(v), t.inicio); break; }
+    case 'fijDia': buscar('fijos', id).dia = Math.min(31, Math.max(1, Math.round(num(v)) || 1)); break;
+    case 'fijFrec': buscar('fijos', id).frecuencia = v; break;
+    // --- Variables ---
+    case 'catNombre': buscar('categorias', id).nombre = v; break;
+    case 'catPres': buscar('categorias', id).presupuesto = num(v); break;
+    case 'catReal': {
+      const vm = state.variables[mesSel] = state.variables[mesSel] || {};
+      const antes = +vm[id] || 0, nuevo = num(v);
+      vm[id] = nuevo;
+      if (Math.abs(nuevo - antes) > 0.004) registrarApunte({tipo:'ajuste', catId:id, importe:Math.round((nuevo - antes) * 100) / 100, nota:'Total corregido a mano'});
+      break;
+    }
+    case 'apNota': { const a = (state.apuntes || []).find(x => x.id === id); if (a) a.nota = v.trim(); break; }
+    // --- Inflación ---
+    case 'ctaNombre': buscar('cuentas', id).nombre = v; break;
+    case 'ctaSaldo': buscar('cuentas', id).saldo = num(v); break;
+    case 'ctaRent': buscar('cuentas', id).rent = num(v); break;
+    case 'ctaAporte': buscar('cuentas', id).aporte = num(v); break;
+    // --- Objetivos ---
+    case 'objNombre': buscar('objetivos', id).nombre = v; break;
+    case 'objMeta': buscar('objetivos', id).objetivo = num(v); break;
+    case 'objAhorrado': buscar('objetivos', id).ahorrado = num(v); break;
+    case 'objAporte': buscar('objetivos', id).aporte = v.trim() === '' ? '' : num(v); break;
+    default: return;
+  }
+  guardar();
+  // Repintamos la sección afectada y todas las cifras
+  const g = el.dataset.ch;
+  if (g.startsWith('ing')) pintarIngresos();
+  if (g.startsWith('fij')) pintarFijos();
+  if (g.startsWith('cat')) pintarVariables();
+  if (g.startsWith('cta')) calcularInflacion();
+  if (g === 'apNota') pintarVariables();
+  pintarCifras();
+});
+
+// Recalcula la inflación al escribir, sin esperar a salir del campo
+$('inflacion').addEventListener('input', e => { state.inflacion = num(e.target.value); guardar(); calcularInflacion(); });
+$('nombre').addEventListener('input', e => { state.nombre = e.target.value; guardar(); });
+
+// Pulsar Enter en "sumar un gasto" también suma
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.dataset.sumar) { e.preventDefault(); sumarGasto(e.target.dataset.sumar); }
+  if (e.key === 'Enter' && e.target.dataset.sumarnota) { e.preventDefault(); sumarGasto(e.target.dataset.sumarnota); }
+  if (e.key === 'Enter' && e.target.dataset.aportar) { e.preventDefault(); aportarDesdeCampo(e.target.dataset.aportar); }
+});
+function aportarDesdeCampo(id){
+  const inp = document.querySelector(`[data-aportar="${id}"]`);
+  const n = num(inp.value); if (!n) return;
+  aportar(id, n); registrarApunte({tipo:'inversion', ref:id, importe:n, nota:'Aportación a ' + buscar('cuentas', id).nombre});
+  guardar(); pintarInflacion(); pintarResumen(); pintarRegistro();
+  aviso(`✅ Aportados ${eur(n)} a ${buscar('cuentas', id).nombre}`);
+}
+function sumarGasto(catId){
+  const inp = document.querySelector(`[data-sumar="${catId}"]`);
+  const notaInp = document.querySelector(`[data-sumarnota="${catId}"]`);
+  const n = num(inp.value);
+  if (!n){ inp.focus(); return; }
+  const nota = notaInp ? notaInp.value.trim() : '';
+  const vm = state.variables[mesSel] = state.variables[mesSel] || {};
+  vm[catId] = Math.round(((+vm[catId] || 0) + n) * 100) / 100;
+  registrarApunte({tipo:'variable', catId, importe:n, nota});
+  guardar(); pintarVariables(); pintarCifras();
+  const cat = buscar('categorias', catId);
+  aviso(`✅ ${eur(n)} en ${cat ? cat.nombre : 'la categoría'}${nota ? ' · ' + nota : ''}`);
+}
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act],[data-mes]');
+  if (!b) return;
+  if (b.dataset.mes) { mesSel = b.dataset.mes; pintarTodo(); return; }
+  const id = b.dataset.id, lista = b.dataset.tipo === 'ing' ? 'ingresos' : 'fijos';
+  switch (b.dataset.act){
+    case 'nuevoIngreso':
+      state.ingresos.push({id:uid(), concepto:'Nuevo ingreso', importe:0, fecha:mesSel + '-' + String(Math.min(mesSel === HOY_K ? HOY_D : 1, diasMes(mesSel))).padStart(2, '0'), estado:'previsto', frecuencia:'unico', fin:''});
+      break;
+    case 'nuevoFijo':
+      state.fijos.push({id:uid(), concepto:'Nuevo gasto fijo', importe:0, dia:1, frecuencia:'mensual', inicio:mesSel, fin:''});
+      setOv(mesSel, state.fijos[state.fijos.length - 1].id, {estado:'pendiente'});
+      break;
+    case 'nuevaCat': state.categorias.push({id:uid(), nombre:'Nueva categoría', presupuesto:0}); break;
+    case 'nuevaCuenta': { const p = PLANTILLAS[b.dataset.plantilla] || {nombre:'Nueva cuenta', rent:0}; state.cuentas.push({id:uid(), nombre:p.nombre, saldo:0, rent:p.rent, aporte:0}); break; }
+    case 'nuevoObj': state.objetivos.push({id:uid(), nombre:'Nuevo objetivo', objetivo:1000, ahorrado:0, aporte:''}); break;
+    case 'toggleFijo': {
+      const x = fijosMes(mesSel).find(f => f.id === id);
+      setOv(mesSel, id, {estado: x.estado === 'pagado' ? 'pendiente' : 'pagado'});
+      break;
+    }
+    case 'quitarMes': setOv(mesSel, id, {quitado:true}); break;
+    case 'terminar': buscar(lista, id).fin = mesSel; break;
+    case 'eliminar':
+      state[lista] = state[lista].filter(x => x.id !== id);
+      Object.values(state.overrides).forEach(o => delete o[id]);
+      break;
+    case 'sumar': sumarGasto(id); return;
+    case 'verAp': catsAbiertas.has(id) ? catsAbiertas.delete(id) : catsAbiertas.add(id); pintarVariables(); return;
+    case 'borrarAp': borrarApunte(id); return;
+    case 'regFiltro': regFiltro = b.dataset.f; pintarRegistro(); return;
+    case 'aportar': aportarDesdeCampo(id); return;
+    case 'borrarCat': state.categorias = state.categorias.filter(c => c.id !== id); break;
+    case 'borrarCta': state.cuentas = state.cuentas.filter(c => c.id !== id); break;
+    case 'borrarObj': state.objetivos = state.objetivos.filter(o => o.id !== id); break;
+    default: return;
+  }
+  guardar(); pintarTodo();
+});
+
+// Navegación de meses
+$('mesAnt').onclick = () => { mesSel = sumarMeses(mesSel, -1); pintarTodo(); };
+$('mesSig').onclick = () => { mesSel = sumarMeses(mesSel, 1); pintarTodo(); };
+$('btnHoy').onclick = () => { mesSel = HOY_K; pintarTodo(); };
+$('selMes').onchange = () => { mesSel = clave(partes(mesSel).y, +$('selMes').value); pintarTodo(); };
+$('selAnio').onchange = () => { mesSel = clave(+$('selAnio').value, partes(mesSel).m); pintarTodo(); };
+
+/* =========================================================
+   EXPORTAR / IMPORTAR / BORRAR EJEMPLOS
+   ========================================================= */
+$('btnExportar').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mi-economia-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('btnImportar').onclick = () => $('fichero').click();
+$('fichero').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!valido(d)) throw new Error('formato');
+      state = Object.assign(estadoVacio(), d); guardar(); pintarTodo();
+      aviso('Copia importada correctamente.');
+    } catch (err) { aviso('El archivo no es una copia válida de este dashboard.'); }
+  };
+  r.readAsText(f); e.target.value = '';
+};
+$('btnBorrarEj').onclick = () => {
+  // Quita solo lo marcado como ejemplo; lo que hayas añadido tú se queda
+  const fuera = new Set([...state.ingresos, ...state.fijos].filter(x => x.ej).map(x => x.id));
+  state.ingresos = state.ingresos.filter(x => !x.ej);
+  state.fijos = state.fijos.filter(x => !x.ej);
+  state.objetivos = state.objetivos.filter(x => !x.ej);
+  const ctaFuera = state.cuentas.filter(x => x.ej).map(x => x.id);
+  state.cuentas = state.cuentas.filter(x => !x.ej);
+  Object.values(state.aportes || {}).forEach(o => ctaFuera.forEach(id => delete o[id]));
+  Object.values(state.overrides).forEach(o => fuera.forEach(id => delete o[id]));
+  Object.entries(state.ejVars || {}).forEach(([k, cats]) => Object.entries(cats).forEach(([c, v]) => {
+    if (state.variables[k] && state.variables[k][c] === v) delete state.variables[k][c];
+  }));
+  state.apuntes = (state.apuntes || []).filter(x => !x.ej);
+  state.ejVars = {}; state.ejemplo = false;
+  guardar(); pintarTodo();
+  aviso('Datos de ejemplo borrados. Se mantienen las categorías y sus presupuestos.');
+};
+
+// Mensaje breve en pantalla (sin alert, que bloquea la página)
+function aviso(txt, accion){
+  document.querySelectorAll('.aviso-toast').forEach(x => x.remove());   // solo un aviso a la vez
+  const d = document.createElement('div');
+  d.className = 'aviso-toast';
+  d.textContent = txt;
+  if (accion){
+    const b = document.createElement('button'); b.textContent = accion.texto;
+    b.onclick = () => { d.remove(); accion.fn(); };
+    d.appendChild(b);
+  }
+  d.style.cssText = 'position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--texto);color:var(--fondo);padding:12px 18px;border-radius:999px;font-size:.9rem;z-index:30;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+  document.body.appendChild(d); setTimeout(() => d.remove(), accion ? 6000 : 3200);
+}
+
+/* =========================================================
+   REGISTRO POR VOZ (Web Speech API, es-ES)
+   ========================================================= */
+// --- Lectura del importe dicho ("50", "14,99", "1.650", "mil seiscientos cincuenta", "12 con 99") ---
+const sinAcento = t => String(t ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const NUMW = {cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,
+  trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiun:21,veintiuno:21,veintiuna:21,
+  veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,
+  treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,
+  doscientos:200,doscientas:200,trescientos:300,trescientas:300,cuatrocientos:400,cuatrocientas:400,quinientos:500,quinientas:500,
+  seiscientos:600,seiscientas:600,setecientos:700,setecientas:700,ochocientos:800,ochocientas:800,novecientos:900,novecientas:900};
+
+function palabrasANum(s){
+  const tk = s.split(' '), out = [];
+  const esN = x => (x in NUMW) || x === 'mil';
+  let i = 0;
+  while (i < tk.length){
+    const w = tk[i];
+    const unSuelto = (w === 'un' || w === 'una') && !(esN(tk[i + 1] || '') || /^euros?$/.test(tk[i + 1] || ''));
+    if (esN(w) && !unSuelto){
+      let total = 0, cur = 0, ult = null, j = i;
+      while (j < tk.length){
+        const x = tk[j];
+        if (x === 'mil'){ cur = (cur || 1) * 1000; total += cur; cur = 0; ult = 1000; j++; continue; }
+        if (x in NUMW){ cur += NUMW[x]; ult = NUMW[x]; j++; continue; }
+        const sig = tk[j + 1];
+        if (x === 'y' && ult >= 30 && ult <= 90 && ult % 10 === 0 && sig in NUMW && NUMW[sig] > 0 && NUMW[sig] < 10){ j++; continue; }
+        break;
+      }
+      out.push(String(total + cur)); i = j;
+    } else { out.push(w); i++; }
+  }
+  return out.join(' ');
+}
+
+function normalizar(raw){
+  let s = ' ' + sinAcento(raw) + ' ';
+  s = s.replace(/€/g, ' euros ').replace(/[!?¡¿"«»()]/g, ' ').replace(/(\d),(\s)/g, '$1$2').replace(/\s+/g, ' ');
+  s = palabrasANum(s);
+  s = s.replace(/\bs\s*&\s*p\s*500\b|\bs\s*y\s*p\s*500\b|\bsp\s*500\b|\bese pe 500\b/g, ' sp500 ')
+       .replace(/\bnasdaq\s*100\b/g, ' nasdaq100 ').replace(/\bstoxx\s*600\b/g, ' stoxx600 ');
+  return s.replace(/\s+/g, ' ');
+}
+
+function importeDe(s){
+  const re = /(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2})(?!\d)|\.(\d{1,2})(?!\d))?/g;
+  let conUnidad = null, primero = null, m;
+  while ((m = re.exec(s))){
+    if (/[a-z&]/.test(s[m.index - 1] || ' ')) continue;         // "sp500"
+    if (/[a-z]/.test(s[m.index + m[0].length] || ' ')) continue;
+    let v = +m[1].replace(/\./g, ''), dec = m[2] || m[3];
+    if (dec) v += +(dec.length === 1 ? dec + '0' : dec) / 100;
+    let resto = s.slice(m.index + m[0].length), mm;
+    if (/^\s*(%|por ciento)/.test(resto)) continue;
+    if (/\bdia\s*$/.test(s.slice(0, m.index))) continue;
+    if (!dec && (mm = resto.match(/^\s*coma\s+(\d{1,2})\b/))){ v += +mm[1].padEnd(2, '0') / 100; resto = resto.slice(mm[0].length); dec = true; }
+    else if (!dec && (mm = resto.match(/^\s*con\s+(\d{1,2})\b/))){ v += +mm[1] / 100; resto = resto.slice(mm[0].length); dec = true; }
+    let unidad = false;
+    if ((mm = resto.match(/^\s*(euros?|eur|pavos|e)\b/))){
+      unidad = true; resto = resto.slice(mm[0].length);
+      if (!dec && (mm = resto.match(/^\s*(?:con|y)\s+(\d{1,2})(?:\s*centimos?)?\b/))) v += +mm[1] / 100;
+    }
+    v = Math.round(v * 100) / 100;
+    if (v <= 0) continue;
+    if (unidad){ conUnidad = v; break; }
+    if (primero == null) primero = v;
+  }
+  return conUnidad ?? primero ?? 0;
+}
+
+// Concepto libre de la frase ("ingreso de 200 € por clase particular" → "Clase particular")
+function conceptoDe(raw){
+  const t = String(raw).trim(), ART = '(?:(?:el|la|los|las|un|una|mi|mis)\\s+)?';
+  let c = '', m;
+  if ((m = t.match(new RegExp('(?:€|\\beuros?\\b|\\beur\\b)(?:\\s+(?:con|y)\\s+\\S+(?:\\s+c[ée]ntimos?)?)?[\\s,]+(?:en|por|de|del|para|a|al)\\s+' + ART + '(.+)$', 'i')))) c = m[1];
+  else if ((m = t.match(new RegExp('\\b(?:en|por|para|de)\\s+' + ART + '([^\\d]+)$', 'i')))) c = m[1];
+  c = c.replace(/[\s,.;]+(hoy|ayer|este mes|al mes|cada mes|mensual(es)?)\s*[.!]?$/i, '').replace(/[\s.,;:!]+$/, '').trim();
+  if (/^\d/.test(c)) c = '';
+  if (c.length > 50) c = c.slice(0, 50).trim();
+  return c ? c[0].toUpperCase() + c.slice(1) : '';
+}
+
+// --- Comparación de palabras ---
+const VACIAS = new Set(['de','del','la','el','los','las','en','por','para','con','una','unos','unas','mes','euros','euro','gasto','gastos',
+  'fijo','fijos','variable','variables','pago','pagado','pagada','pague','paga','pagar','han','hoy','ayer','este','esta','total',
+  'ingreso','ingresos','ingresado','cobrado','cobrada','cobre','marcar','marca','como','sumar','suma','anade','apunta','nuevo','nueva',
+  'inversion','invertido','invertidos','aportacion','aportado','fondo','fondos','indexado','indexados','cuenta',
+  'que','uno','sus','mis','tus','muy','ese','esa','eso','les','nos','hay','son','fue','era','sin','mas','todo','toda']);
+const palabras = s => sinAcento(s).replace(/[^a-z0-9&\s]/g, ' ').split(/\s+/).filter(Boolean);
+const fichas = s => palabras(s).filter(w => w.length >= 3 && !/^\d+$/.test(w) && !VACIAS.has(w));
+const coincide = (a, b) => { const B = new Set(fichas(b)); return fichas(a).filter(w => B.has(w)).length; };
+
+const GRUPOS_FIJO = [
+  ['spotify','netflix','hbo','disney','prime','youtube','musica','series','suscripcion','suscripciones','icloud','dazn','filmin'],
+  ['internet','fibra','movil','telefono','wifi'],
+  ['luz','electricidad','endesa','iberdrola','naturgy'],
+  ['agua'], ['gas','butano'],
+  ['alquiler','piso','hipoteca','vivienda'],
+  ['gimnasio','gym','crossfit'],
+  ['seguro','seguros','mutua'],
+  ['universidad','matricula','plazo','uni']
+];
+const GRUPOS_VAR = [
+  {kw:['supermercado','super','compra','mercadona','lidl','carrefour','aldi','alcampo','eroski','consum','fruteria','carniceria','panaderia','alimentacion'], pistas:['supermerc','super','compra','aliment'], nombre:'Supermercado'},
+  {kw:['restaurante','restaurantes','cena','cenar','comida','comer','almuerzo','desayuno','bar','cafe','cafes','cafeteria','tapas','cerveza','cervezas','pizza','hamburguesa','glovo'], pistas:['restaur','comida','comer'], nombre:'Restaurantes'},
+  {kw:['ocio','cine','concierto','fiesta','copas','discoteca','entradas','teatro','museo','videojuego','juego','escapada','viaje'], pistas:['ocio'], nombre:'Ocio'},
+  {kw:['transporte','gasolina','combustible','gasoil','metro','bus','autobus','taxi','uber','cabify','tren','renfe','parking','aparcamiento','abono','peaje','patinete'], pistas:['transport','gasolin','coche'], nombre:'Transporte'},
+  {kw:['ropa','zapatos','zapatillas','zara','primark','camiseta','pantalon','pantalones','abrigo','chaqueta'], pistas:['ropa'], nombre:'Ropa'},
+  {kw:['salud','farmacia','medico','dentista','fisio','fisioterapeuta','medicinas','medicamentos','optica'], pistas:['salud','farmac','medic'], nombre:'Salud'},
+  {kw:['universidad','uni','material','libro','libros','apuntes','fotocopias','papeleria','facultad'], pistas:['universi','estudi','material'], nombre:'Material universidad'},
+  {kw:['imprevisto','imprevistos','reparacion','averia','multa','arreglo','taller','urgencia'], pistas:['imprevist'], nombre:'Imprevistos'}
+];
+const GRUPOS_INV = [
+  {kw:['msci','world','mundial','global'], pistas:['msci','world','mundial','global'], nombre:'Fondo Indexado MSCI World', rent:7},
+  {kw:['sp500','s&p','nasdaq','nasdaq100','americano','usa'], pistas:['s&p','sp500','sp 500','nasdaq','americ'], nombre:'Fondo Indexado S&P 500', rent:7},
+  {kw:['emergentes','emergente','emerging'], pistas:['emergent','emerging'], nombre:'Fondo Mercados Emergentes', rent:6},
+  {kw:['europa','europe','stoxx600','eurostoxx'], pistas:['europ','stoxx'], nombre:'Fondo Indexado Europa', rent:6},
+  {kw:['remunerada','remunerado'], pistas:['remunerad'], nombre:'Cuenta remunerada', rent:2},
+  {kw:['deposito'], pistas:['deposito'], nombre:'Depósito a plazo', rent:2.5}
+];
+
+// --- Búsquedas en los datos del mes seleccionado ---
+function buscarFijo(s){
+  const pt = palabras(s);
+  let mejor = null, pm = 0, directo = false;
+  for (const x of fijosMes(mesSel)){
+    const ct = palabras(x.concepto);
+    const d = coincide(s, x.concepto);
+    let p = d * 2;
+    GRUPOS_FIJO.forEach(g => { if (g.some(w => pt.includes(w)) && g.some(w => ct.includes(w))) p += 1; });
+    if (p > pm){ pm = p; mejor = x; directo = d > 0; }
+  }
+  return mejor ? {x:mejor, directo} : null;
+}
+function buscarCategoria(s){
+  let mejor = null, pm = 0;
+  state.categorias.forEach(c => { const p = coincide(s, c.nombre); if (p > pm){ pm = p; mejor = c; } });
+  if (mejor) return {cat:mejor};
+  const pt = palabras(s);
+  for (const g of GRUPOS_VAR){
+    if (!g.kw.some(w => pt.includes(w))) continue;
+    const cat = state.categorias.find(c => g.pistas.some(p => sinAcento(c.nombre).includes(p)));
+    return cat ? {cat} : {crear:g.nombre};
+  }
+  return null;
+}
+function catImprevistos(){
+  const cat = state.categorias.find(c => sinAcento(c.nombre).includes('imprevist'));
+  return cat ? {cat} : {crear:'Imprevistos'};
+}
+function buscarVehiculo(s){
+  const pt = palabras(s);
+  for (const g of GRUPOS_INV){
+    if (!g.kw.some(w => pt.includes(w))) continue;
+    const v = state.cuentas.find(a => g.pistas.some(p => sinAcento(a.nombre).includes(p)));
+    return v ? {v} : {crear:g};
+  }
+  let mejor = null, pm = 0;
+  state.cuentas.forEach(a => { const p = coincide(s, a.nombre); if (p > pm){ pm = p; mejor = a; } });
+  if (mejor) return {v:mejor};
+  const fondo = state.cuentas.find(a => /fondo|indexad|etf/.test(sinAcento(a.nombre)));
+  return fondo ? {v:fondo} : {crear:{nombre:'Fondo indexado', rent:7}};
+}
+function buscarIngreso(s){
+  const lista = ingresosMes(mesSel);
+  if (/\b(nomina|sueldo|salario)\b/.test(s)){
+    const x = lista.find(i => /nomina|sueldo|salario/.test(sinAcento(i.concepto)));
+    if (x) return x;
+  }
+  let mejor = null, pm = 0;
+  lista.forEach(i => { const p = coincide(s, i.concepto); if (p > pm){ pm = p; mejor = i; } });
+  return mejor;
+}
+const diaRegistro = () => String(Math.min(mesSel === HOY_K ? HOY_D : 1, diasMes(mesSel))).padStart(2, '0');
+
+// --- Planes: qué se va a hacer (vista previa) y cómo aplicarlo ---
+function planVariable(r, imp){
+  if (!imp) return {ok:false, desc:'No he entendido el importe. Prueba: «50 euros en supermercado».'};
+  const nombre = r.cat ? r.cat.nombre : r.crear;
+  return {ok:true, tipo:'variable',
+    desc:`Sumar <b>${eur(imp)}</b> a <b>${esc(nombre)}</b> (gasto variable)${r.crear ? ' · se creará la categoría' : ''}`,
+    aplicar(){
+      let cat = r.cat;
+      if (!cat){ cat = {id:uid(), nombre:r.crear, presupuesto:0}; state.categorias.push(cat); }
+      const vm = state.variables[mesSel] = state.variables[mesSel] || {};
+      vm[cat.id] = Math.round(((+vm[cat.id] || 0) + imp) * 100) / 100;
+      registrarApunte({tipo:'variable', catId:cat.id, importe:imp});
+      return `✅ Sumados ${eur(imp)} a ${cat.nombre}`;
+    }};
+}
+function planFijoExistente(f, imp, directo){
+  const x = f;
+  const cambia = imp && directo && Math.abs(imp - x.importe) > 0.004;
+  const ya = x.estado === 'pagado';
+  let desc = cambia ? `<b>${esc(x.concepto)}</b>: importe ${eur(x.importe)} → <b>${eur(imp)}</b> y marcar como pagado`
+                    : `Marcar <b>${esc(x.concepto)}</b> (${eur(x.importe)}) como pagado${ya ? ' · ya lo estaba' : ''}`;
+  if (imp && !directo && Math.abs(imp - x.importe) > 0.004) desc += `<small>El importe registrado sigue siendo ${eur(x.importe)}. Para cambiarlo di «gasto fijo de ${numIn(imp)} € en ${esc(x.concepto)}» o edítalo en la tabla.</small>`;
+  return {ok:true, tipo:'fijo', desc,
+    aplicar(){
+      const t = buscar('fijos', x.id);
+      if (cambia) cambiarImporte('fijos', t, imp, t.inicio);
+      setOv(mesSel, x.id, {estado:'pagado'});
+      registrarApunte({tipo:'fijo', ref:x.id, importe:cambia ? imp : x.importe, nota:t.concepto + ' · pagado'});
+      return cambia ? `✅ ${t.concepto}: ${eur(imp)} y marcado como pagado` : `✅ ${t.concepto} marcado como pagado (${eur(x.importe)})`;
+    }};
+}
+function planFijoNuevo(raw, imp){
+  const concepto = conceptoDe(raw);
+  if (!imp || !concepto) return {ok:false, desc:'Para crear un gasto fijo dime importe y concepto: «gasto fijo de 9,99 en Disney Plus».'};
+  return {ok:true, tipo:'fijo',
+    desc:`Nuevo gasto fijo mensual <b>${esc(concepto)}</b> de <b>${eur(imp)}</b> desde ${nombreMes(mesSel)} (pagado este mes)`,
+    aplicar(){
+      const f = {id:uid(), concepto, importe:imp, dia:+diaRegistro(), frecuencia:'mensual', inicio:mesSel, fin:''};
+      state.fijos.push(f); setOv(mesSel, f.id, {estado:'pagado'});
+      registrarApunte({tipo:'fijo', ref:f.id, importe:imp, nota:concepto + ' · nuevo gasto fijo'});
+      return `✅ Nuevo gasto fijo «${concepto}»: ${eur(imp)} al mes`;
+    }};
+}
+function planIngreso(raw, s, imp){
+  const x = buscarIngreso(s);
+  if (x){
+    const cambia = imp && Math.abs(imp - x.importe) > 0.004;
+    return {ok:true, tipo:'ingreso',
+      desc: cambia ? `<b>${esc(x.concepto)}</b>: importe ${eur(x.importe)} → <b>${eur(imp)}</b> y marcar como cobrado`
+                   : `Marcar <b>${esc(x.concepto)}</b> (${eur(x.importe)}) como cobrado${x.estado === 'cobrado' ? ' · ya lo estaba' : ''}`,
+      aplicar(){
+        const t = buscar('ingresos', x.id), origen = mesSel === t.fecha.slice(0, 7);
+        if (cambia){ if (t.frecuencia === 'unico') t.importe = imp; else setOv(mesSel, t.id, {importe:imp}); }
+        if (t.frecuencia === 'unico' || origen){ t.estado = 'cobrado'; delete (state.overrides[mesSel] || {})[t.id]?.estado; }
+        else setOv(mesSel, t.id, {estado:'cobrado'});
+        registrarApunte({tipo:'ingreso', ref:t.id, importe:cambia ? imp : x.importe, nota:t.concepto + ' · cobrado'});
+        return cambia ? `✅ ${t.concepto}: ${eur(imp)} y marcado como cobrado` : `✅ ${t.concepto} marcado como cobrado (${eur(x.importe)})`;
+      }};
+  }
+  if (!imp) return {ok:false, desc:'No encuentro ese ingreso en este mes. Dime el importe: «ingreso de 200 € por clase particular».'};
+  let concepto = conceptoDe(raw);
+  if (!concepto) concepto = /\bextra\b/.test(s) ? 'Ingreso extra' : /\b(nomina|sueldo|salario)\b/.test(s) ? 'Nómina' : 'Ingreso';
+  return {ok:true, tipo:'ingreso',
+    desc:`Añadir ingreso <b>${esc(concepto)}</b> de <b>${eur(imp)}</b> como cobrado`,
+    aplicar(){
+      const nuevoIng = {id:uid(), concepto, importe:imp, fecha:mesSel + '-' + diaRegistro(), estado:'cobrado', frecuencia:'unico', fin:''};
+      state.ingresos.push(nuevoIng);
+      registrarApunte({tipo:'ingreso', ref:nuevoIng.id, importe:imp, nota:concepto});
+      return `✅ Añadido ingreso «${concepto}» de ${eur(imp)} (cobrado)`;
+    }};
+}
+function planInversion(s, imp){
+  if (!imp) return {ok:false, desc:'No he entendido el importe. Prueba: «inversión de 300 euros en MSCI World».'};
+  const r = buscarVehiculo(s);
+  const nombre = r.v ? r.v.nombre : r.crear.nombre;
+  return {ok:true, tipo:'inversion',
+    desc:`Invertir <b>${eur(imp)}</b> en <b>${esc(nombre)}</b>${r.crear ? ` · se creará el vehículo (rentabilidad estimada ${pct(r.crear.rent)})` : ''}`,
+    aplicar(){
+      let v = r.v;
+      if (!v){ v = {id:uid(), nombre:r.crear.nombre, saldo:0, rent:r.crear.rent, aporte:0}; state.cuentas.push(v); }
+      aportar(v.id, imp);
+      registrarApunte({tipo:'inversion', ref:v.id, importe:imp, nota:'Aportación a ' + v.nombre});
+      return `✅ Invertidos ${eur(imp)} en ${v.nombre}`;
+    }};
+}
+
+// Analiza la frase y decide en qué sección va
+function planVoz(raw){
+  const s = normalizar(raw), imp = importeDe(s);
+  const hay = re => re.test(s);
+  if (!s.trim()) return {ok:false, desc:''};
+
+  if (hay(/\bgastos? fijos?\b/)){
+    const f = buscarFijo(s);
+    if (f && f.directo) return planFijoExistente(f.x, imp, true);
+    return planFijoNuevo(raw, imp);
+  }
+  if (hay(/\bgastos? variables?\b/)) return planVariable(buscarCategoria(s) || catImprevistos(), imp);
+  if (hay(/\b(inver\w*|invierto|invertid\w*|aport\w*|fondos?|indexad\w*|etf|msci|sp500|nasdaq100|s&p)\b/)) return planInversion(s, imp);
+
+  const meCobran = hay(/\bme (han )?cobrad|\bme cobr/);
+  const esIngreso = !meCobran && (hay(/\b(ingres\w*|nomina|sueldo|salario|me han pagado|me pagaron|he cobrado|cobrado|cobre|paga extra)\b/)
+                    || (hay(/\bextra\b/) && !hay(/\b(gast\w*|pague|pagado|compr\w*)\b/)));
+  if (esIngreso) return planIngreso(raw, s, imp);
+
+  const f = buscarFijo(s);
+  if (f && hay(/\b(matricula|plazo)\b/)) return planFijoExistente(f.x, imp, f.directo);
+  const c = buscarCategoria(s);
+  if (c) return planVariable(c, imp);
+  if (f) return planFijoExistente(f.x, imp, f.directo);
+  if (imp){
+    const p = planVariable(catImprevistos(), imp);
+    p.desc += '<small>No he reconocido la categoría: lo apunto en Imprevistos.</small>';
+    return p;
+  }
+  return {ok:false, desc:'No he entendido el importe ni el concepto. Prueba: «50 euros en supermercado».'};
+}
+
+// --- Micrófono y panel ---
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+let reco = null, escuchando = false, tSilencio = null, tMaximo = null, planActual = null;
+
+function estadoVoz(txt, on){
+  $('vozEstadoTxt').textContent = txt;
+  $('vozEstado').classList.toggle('on', !!on);
+  $('vozFab').classList.toggle('escuchando', !!on);
+  $('vozFab').setAttribute('aria-label', on ? 'Dejar de escuchar' : 'Registrar por voz');
+}
+function actualizarPlanVoz(){
+  const txt = $('vozTexto').value.trim(), caja = $('vozPlan');
+  planActual = txt ? planVoz(txt) : null;
+  caja.className = 'voz-plan' + (!planActual ? ' vacio-plan' : planActual.ok ? '' : ' error');
+  caja.innerHTML = !planActual ? 'Di qué quieres apuntar: un gasto, un ingreso o una inversión.'
+    : planActual.ok ? planActual.desc + `<small>Se registrará en ${nombreMes(mesSel)}.</small>` : planActual.desc;
+  $('vozOk').disabled = !(planActual && planActual.ok);
+}
+function abrirVoz(){
+  $('vozPanel').hidden = false;
+  $('vozTexto').value = ''; actualizarPlanVoz();
+  if (!Reconocimiento){
+    estadoVoz('Dictado no disponible: escribe o usa el micrófono del teclado', false);
+    setTimeout(() => $('vozTexto').focus(), 50);
+    return;
+  }
+  try {
+    reco = new Reconocimiento();
+    reco.lang = 'es-ES'; reco.interimResults = true; reco.continuous = true; reco.maxAlternatives = 1;
+    reco.onresult = e => {
+      let t = '';
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + ' ';
+      $('vozTexto').value = t.replace(/\s+/g, ' ').trim();
+      actualizarPlanVoz();
+      clearTimeout(tSilencio); tSilencio = setTimeout(pararVoz, 1800);
+    };
+    reco.onerror = e => {
+      const m = {'not-allowed':'Permite el micrófono para este sitio en los ajustes del navegador.',
+                 'service-not-allowed':'Activa Siri y Dictado en los ajustes del iPhone.',
+                 'no-speech':'No te he oído. Pulsa 🎤 para repetir.',
+                 'audio-capture':'No encuentro el micrófono.',
+                 'network':'Sin conexión para reconocer la voz.'}[e.error];
+      if (m) aviso(m);
+    };
+    reco.onend = () => {
+      escuchando = false; reco = null; clearTimeout(tSilencio); clearTimeout(tMaximo);
+      if ($('vozPanel').hidden) return estadoVoz('', false);
+      estadoVoz($('vozTexto').value ? 'Revisa y confirma' : 'Pulsa 🎤 para repetir o escribe', false);
+    };
+    reco.start();
+    escuchando = true; estadoVoz('Escuchando… habla ahora', true);
+    tMaximo = setTimeout(pararVoz, 20000);
+  } catch (err){
+    estadoVoz('No se pudo activar el micrófono: escribe la frase', false);
+    $('vozTexto').focus();
+  }
+}
+function pararVoz(){
+  clearTimeout(tSilencio); clearTimeout(tMaximo);
+  try { reco && reco.stop(); } catch (e) {}
+}
+function cerrarVoz(){
+  pararVoz(); $('vozPanel').hidden = true; $('vozTexto').value = ''; planActual = null; estadoVoz('', false);
+}
+function confirmarVoz(){
+  if (!planActual || !planActual.ok) return;
+  fraseVoz = $('vozTexto').value.trim();
+  let msg;
+  try { msg = planActual.aplicar(); } finally { fraseVoz = ''; }
+  guardar(); pintarTodo(); aviso(msg); cerrarVoz();
+}
+$('vozFab').addEventListener('click', () => {
+  if (escuchando) pararVoz();
+  else if (!$('vozPanel').hidden && !Reconocimiento) $('vozTexto').focus();
+  else abrirVoz();
+});
+$('vozTexto').addEventListener('input', () => { if (escuchando) pararVoz(); actualizarPlanVoz(); });
+$('vozTexto').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); confirmarVoz(); } });
+$('vozOk').onclick = confirmarVoz;
+$('vozCancelar').onclick = cerrarVoz;
+$('vozCerrar').onclick = cerrarVoz;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('vozPanel').hidden) cerrarVoz(); });
+
+// Icono para la pantalla de inicio (se genera aquí para no depender de archivos externos)
+try {
+  const c = document.createElement('canvas'); c.width = c.height = 180;
+  const g = c.getContext('2d');
+  g.fillStyle = '#2e7d6b'; g.fillRect(0, 0, 180, 180);
+  g.fillStyle = '#fff'; g.font = 'bold 104px system-ui, -apple-system, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('€', 90, 98);
+  $('iconoApp').href = c.toDataURL('image/png');
+} catch (e) {}
+
+
+/* =========================================================
+   REGISTRO DE APUNTES: qué has apuntado y en qué se ha ido el dinero
+   ========================================================= */
+let fraseVoz = '';                 // frase dictada mientras se confirma un apunte por voz
+let regFiltro = 'todos';
+const catsAbiertas = new Set();    // categorías con la lista de apuntes desplegada
+const DIAS_SEM = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const ICONO_AP = {variable:'🛒', ajuste:'✏️', fijo:'📄', ingreso:'💶', inversion:'📈'};
+
+// Nota a partir de lo dictado: «50 euros en la compra» → «Compra»; «cena en restaurante 42 €» → «Cena en restaurante»
+function notaDeVoz(raw){
+  const c = conceptoDe(raw); if (c) return c;
+  let t = String(raw)
+    .replace(/\d+(?:[.,]\d+)*\s*(?:€|euros?)?(?:\s+(?:con|y)\s+\d+(?:\s*c[ée]ntimos?)?)?/gi, ' ')
+    .replace(/\b(gastos?)\s+(fijos?|variables?)\b/gi, ' ')
+    .replace(/\b(ayer|hoy|anteayer|antes de ayer)\b/gi, ' ')
+    .replace(/\s+/g, ' ').trim()
+    .replace(/^(de|del|en|por|para|a|al)\s+/i, '').replace(/\s+(de|del|en|por|para|a|al)$/i, '').replace(/[,.;:]+$/, '').trim();
+  return t ? t[0].toUpperCase() + t.slice(1, 60) : '';
+}
+
+// Día del mes en el que se apunta (si dices «ayer» por voz, el día anterior)
+function diaApunte(){
+  if (mesSel !== HOY_K) return null;               // apuntes en otros meses: sin día concreto
+  let d = HOY_D;
+  const f = sinAcento(fraseVoz);
+  if (/\b(anteayer|antes de ayer)\b/.test(f)) d -= 2;
+  else if (/\bayer\b/.test(f)) d -= 1;
+  return Math.max(1, d);
+}
+
+function registrarApunte(o){
+  state.apuntes = state.apuntes || [];
+  const nota = o.nota != null && o.nota !== '' ? o.nota : (fraseVoz ? notaDeVoz(fraseVoz) : '');
+  state.apuntes.push({
+    id:uid(), mes:mesSel, dia:diaApunte(), tipo:o.tipo, catId:o.catId || null, ref:o.ref || null,
+    importe:Math.round(o.importe * 100) / 100, nota, texto:fraseVoz || '', origen:fraseVoz ? 'voz' : 'manual', ts:Date.now()
+  });
+}
+
+const apuntesMes = k => (state.apuntes || []).filter(a => a.mes === k);
+const ordenAp = (a, b) => (b.dia ?? 0) - (a.dia ?? 0) || (b.ts || 0) - (a.ts || 0);
+const claveNota = n => sinAcento(n).replace(/[^a-z0-9ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
+const nombreCat = id => (state.categorias.find(c => c.id === id) || {}).nombre || 'Categoría eliminada';
+function etiquetaAp(a){
+  if (a.tipo === 'variable' || a.tipo === 'ajuste') return nombreCat(a.catId);
+  if (a.tipo === 'fijo') return 'Gasto fijo';
+  if (a.tipo === 'ingreso') return 'Ingreso';
+  return 'Inversión';
+}
+
+// Agrupa los apuntes por nota parecida: «Mercadona» ×3 → 92,40 €
+function agruparPorNota(lista){
+  const g = new Map();
+  lista.forEach(a => {
+    const k = claveNota(a.nota) || '·sin-nota';
+    const x = g.get(k) || {nota:a.nota || 'Sin nota', total:0, n:0};
+    x.total += a.importe; x.n++;
+    if (a.nota) x.nota = a.nota;
+    g.set(k, x);
+  });
+  return [...g.values()].filter(x => x.total > 0.004).sort((a, b) => b.total - a.total);
+}
+
+// Debajo de cada categoría: en qué se ha ido + lista desplegable
+function desgloseCategoria(c, real){
+  const lista = apuntesMes(mesSel).filter(a => a.catId === c.id && (a.tipo === 'variable' || a.tipo === 'ajuste')).sort(ordenAp);
+  const apuntado = lista.reduce((s, a) => s + a.importe, 0);
+  const sinDetalle = Math.round((real - apuntado) * 100) / 100;
+  const grupos = agruparPorNota(lista.filter(a => a.tipo === 'variable'));
+  if (!lista.length && !real) return '<div class="desglose"><span class="etq">Aún no hay apuntes este mes.</span></div>';
+  let html = '<div class="desglose"><span class="etq">En qué:</span>';
+  html += grupos.slice(0, 4).map(x => `<span class="pastilla" title="${esc(x.nota)}">${esc(x.nota)} · <b>${eur(x.total)}</b>${x.n > 1 ? ` (${x.n})` : ''}</span>`).join('');
+  if (grupos.length > 4) html += `<span class="pastilla gris">+${grupos.length - 4} más</span>`;
+  if (sinDetalle > 0.004) html += `<span class="pastilla gris" title="Importe que no tiene apuntes (por ejemplo, de antes de usar el registro)">Sin detalle · ${eur(sinDetalle)}</span>`;
+  if (lista.length) html += `<button class="ver-ap" data-act="verAp" data-id="${c.id}">${catsAbiertas.has(c.id) ? 'Ocultar apuntes ▴' : `Ver ${lista.length} apunte${lista.length === 1 ? '' : 's'} ▾`}</button>`;
+  html += '</div>';
+  if (catsAbiertas.has(c.id) && lista.length){
+    html += '<ul class="ap-cat">' + lista.map(a => `<li>
+      <span class="d">${a.dia ? a.dia + ' ' + MESES[partes(a.mes).m].slice(0, 3).toLowerCase() : '—'}</span>
+      <span class="n">${a.origen === 'voz' ? '🎤 ' : ''}${esc(a.nota || (a.tipo === 'ajuste' ? 'Ajuste' : 'Sin nota'))}</span>
+      <span class="i">${a.importe < 0 ? '−' : ''}${eur(Math.abs(a.importe))}</span>
+      <button class="mini" data-act="borrarAp" data-id="${a.id}" title="Borrar apunte" aria-label="Borrar apunte">✕</button></li>`).join('') + '</ul>';
+  }
+  return html;
+}
+
+// Sección «Registro de apuntes» del mes
+function pintarRegistro(){
+  if (!$('regLista')) return;
+  const todos = apuntesMes(mesSel);
+  const filtros = [['todos', 'Todos'], ['variable', 'Gastos variables'], ['fijo', 'Gastos fijos'], ['ingreso', 'Ingresos'], ['inversion', 'Inversiones']];
+  const cuenta = f => f === 'todos' ? todos.length : todos.filter(a => a.tipo === f || (f === 'variable' && a.tipo === 'ajuste')).length;
+  $('regFiltros').innerHTML = filtros.map(([f, n]) => `<button class="filtro ${regFiltro === f ? 'on' : ''}" data-act="regFiltro" data-f="${f}">${n} (${cuenta(f)})</button>`).join('');
+
+  const q = claveNota($('regBuscar').value);
+  let lista = todos.filter(a => regFiltro === 'todos' || a.tipo === regFiltro || (regFiltro === 'variable' && a.tipo === 'ajuste'));
+  if (q) lista = lista.filter(a => claveNota(a.nota + ' ' + etiquetaAp(a) + ' ' + (a.texto || '')).includes(q));
+  lista.sort(ordenAp);
+
+  // Resumen: en qué se ha ido el dinero (gastos variables del mes, o lo que coincida con la búsqueda)
+  const gastos = lista.filter(a => a.tipo === 'variable');
+  if (q){
+    const tot = lista.reduce((s, a) => s + (a.tipo === 'ingreso' ? 0 : a.importe), 0);
+    $('regResumen').innerHTML = lista.length
+      ? `<h3>«${esc($('regBuscar').value.trim())}» en ${nombreMes(mesSel)}</h3><div>${lista.length} apunte${lista.length === 1 ? '' : 's'} · <b>${eur(tot)}</b> gastado</div>`
+      : `<h3>Sin resultados</h3><div class="sub" style="margin:0">No hay apuntes que coincidan en ${nombreMes(mesSel)}.</div>`;
+  } else {
+    const grupos = agruparPorNota(gastos);
+    const max = grupos.length ? grupos[0].total : 1;
+    const totVar = gastos.reduce((s, a) => s + a.importe, 0);
+    $('regResumen').innerHTML = grupos.length
+      ? `<h3>¿En qué se te ha ido el dinero? <span style="font-weight:400;color:var(--suave)">· ${eur(totVar)} apuntados</span></h3>` +
+        grupos.slice(0, 6).map(x => `<div class="top-fila"><div class="cab"><span>${esc(x.nota)}<small>${x.n > 1 ? x.n + ' veces' : ''}</small></span><b>${eur(x.total)}</b></div>
+          <div class="barra-top"><div style="width:${x.total / max * 100}%"></div></div></div>`).join('') +
+        (grupos.length > 6 ? `<div class="nota" style="margin-top:8px">Y ${grupos.length - 6} conceptos más en la lista de abajo.</div>` : '')
+      : `<h3>¿En qué se te ha ido el dinero?</h3><div class="sub" style="margin:0">Apunta tus gastos con una nota (o díctalos con 🎤) y aquí verás un resumen de este mes.</div>`;
+  }
+
+  if (!lista.length){ $('regLista').innerHTML = `<li class="vacio">${todos.length ? 'Nada con este filtro.' : 'No hay apuntes en ' + nombreMes(mesSel) + '.'}</li>`; return; }
+  const {y, m} = partes(mesSel);
+  let html = '', diaAct;
+  lista.forEach(a => {
+    const d = a.dia ?? 0;
+    if (d !== diaAct){
+      diaAct = d;
+      const delDia = lista.filter(x => (x.dia ?? 0) === d);
+      const gastoDia = delDia.reduce((s, x) => s + (x.tipo === 'ingreso' || x.tipo === 'inversion' ? 0 : x.importe), 0);
+      const titulo = d ? `${DIAS_SEM[new Date(y, m, d).getDay()]} ${d}${mesSel === HOY_K && d === HOY_D ? ' · hoy' : ''}` : 'Sin día concreto';
+      html += `<li class="reg-dia"><span>${titulo}</span><span>${gastoDia ? 'Gastado ' + eur(gastoDia) : ''}</span></li>`;
+    }
+    const hora = a.ts ? new Date(a.ts).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}) : '';
+    const mas = a.tipo === 'ingreso';
+    html += `<li class="reg-item">
+      <div class="reg-ic">${ICONO_AP[a.tipo] || '•'}</div>
+      <input class="reg-nota" value="${esc(a.nota)}" placeholder="Añade una nota…" data-ch="apNota" data-id="${a.id}" maxlength="60" aria-label="Nota del apunte">
+      <div class="reg-imp ${mas ? 'mas' : ''}">${mas ? '+' : (a.importe < 0 ? '+' : '−')}${eur(Math.abs(a.importe))}</div>
+      <small class="reg-sub">${esc(etiquetaAp(a))}${a.origen === 'voz' ? ' · 🎤 voz' : ''}${hora ? ' · ' + hora : ''}${a.origen === 'voz' && a.texto ? ' · «' + esc(a.texto) + '»' : ''}</small>
+      <button class="mini reg-x" data-act="borrarAp" data-id="${a.id}" title="Borrar apunte" aria-label="Borrar apunte">✕</button>
+    </li>`;
+  });
+  $('regLista').innerHTML = html;
+}
+$('regBuscar').addEventListener('input', pintarRegistro);
+
+// Borrar un apunte deshace su importe (gastos variables e inversiones). Con opción de deshacer.
+function borrarApunte(id){
+  const a = (state.apuntes || []).find(x => x.id === id); if (!a) return;
+  const copia = JSON.stringify(state);
+  let txt;
+  if (a.tipo === 'variable' || a.tipo === 'ajuste'){
+    const vm = state.variables[a.mes] = state.variables[a.mes] || {};
+    vm[a.catId] = Math.max(0, Math.round(((+vm[a.catId] || 0) - a.importe) * 100) / 100);
+    txt = `Apunte borrado: ${a.importe >= 0 ? 'restados' : 'sumados'} ${eur(Math.abs(a.importe))} ${a.importe >= 0 ? 'de' : 'a'} ${nombreCat(a.catId)}`;
+  } else if (a.tipo === 'inversion'){
+    const v = state.cuentas.find(c => c.id === a.ref);
+    if (v) v.saldo = Math.max(0, Math.round(((+v.saldo || 0) - a.importe) * 100) / 100);
+    const am = (state.aportes || {})[a.mes];
+    if (am && am[a.ref] != null) am[a.ref] = Math.max(0, Math.round((am[a.ref] - a.importe) * 100) / 100);
+    txt = `Aportación borrada: restados ${eur(a.importe)}${v ? ' de ' + v.nombre : ''}`;
+  } else {
+    txt = 'Anotación borrada (el estado del ' + (a.tipo === 'fijo' ? 'gasto fijo' : 'ingreso') + ' no cambia)';
+  }
+  state.apuntes = state.apuntes.filter(x => x.id !== id);
+  guardar(); pintarTodo();
+  aviso(txt, {texto:'Deshacer', fn:() => { state = JSON.parse(copia); guardar(); pintarTodo(); aviso('Apunte recuperado'); }});
+}
+
+/* ===================== ARRANQUE ===================== */
+pintarTodo();
+</script>
+</body>
+</html>
